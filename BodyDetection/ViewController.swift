@@ -1,5 +1,5 @@
 /*
-See LICENSE folder for this sample’s licensing information.
+See the LICENSE.txt file for this sample’s licensing information.
 
 Abstract:
 The sample app's main view controller.
@@ -43,16 +43,17 @@ class ViewController: UIViewController, ARSessionDelegate {
                     print("Error: Unable to load model: \(error.localizedDescription)")
                 }
                 cancellable?.cancel()
-        }, receiveValue: { (character: Entity) in
-            if let character = character as? BodyTrackedEntity {
-                // Scale the character to human size
-                character.scale = [1.0, 1.0, 1.0]
-                self.character = character
-                cancellable?.cancel()
-            } else {
-                print("Error: Unable to load model as BodyTrackedEntity")
+            }, receiveValue: { (character: Entity) in
+                if let character = character as? BodyTrackedEntity {
+                    // Scale the character to human size
+                    character.scale = [1.0, 1.0, 1.0]
+                    self.character = character
+                    cancellable?.cancel()
+                } else {
+                    print("Error: Unable to load model as BodyTrackedEntity")
+                }
             }
-        })
+        )
     }
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
