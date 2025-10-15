@@ -182,12 +182,12 @@ class ViewController: UIViewController, ARSessionDelegate {
     // Positive z nudges the model slightly back toward the skeleton if it looks in front
     // Adjust these if your asset appears offset relative to the tracked body
     private let modelXOffset: Float = 0   // e.g. -0.02 to lower slightly
-    private let modelYOffset: Float = 0   // e.g. 0.04–0.10 to push back onto the body
+    private let modelYOffset: Float = -0.055   // e.g. 0.04–0.10 to push back onto the body
     private let modelZOffset: Float = 0    // e.g. slight lateral nudge if needed
     private let modelYawDegrees: Float = 0.0 // e.g. 180 if the asset faces the wrong way
-    private let modelXScale: Float = 0.008  // 20% narrower (0.01 * 0.8)
+    private let modelXScale: Float = 0.0095  // 20% narrower (0.01 * 0.8)
     private let modelYScale: Float = 0.0095 // Slight vertical shrink
-    private let modelZScale: Float = 0.008  // 20% narrower (0.01 * 0.8)
+    private let modelZScale: Float = 0.0095  // 20% narrower (0.01 * 0.8)
 
 
     override func viewDidLoad() {
@@ -286,7 +286,7 @@ class ViewController: UIViewController, ARSessionDelegate {
             printEntityTree(child, level: level + 1)
         }
     }
-
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
@@ -325,7 +325,7 @@ class ViewController: UIViewController, ARSessionDelegate {
 
         // Load the skinned, body-tracked dress
         // Try loading as a regular Entity first
-        loadCancellable = Entity.loadBodyTrackedAsync(named: "character/asrl-hollow-single").sink(
+        loadCancellable = Entity.loadBodyTrackedAsync(named: "asrl-hollow-thinner").sink(
             receiveCompletion: { completion in
                 if case let .failure(error) = completion {
                     print("Error loading model: \(error)")
@@ -376,11 +376,40 @@ class ViewController: UIViewController, ARSessionDelegate {
                 bodyEntity.transform = t
                 
                 self.bodyAnchor.addChild(bodyEntity)
+                
+                print("📋 Available joint names:", bodyEntity.jointNames)
+                self.printAllJointNames(in: bodyEntity)
+                
                 self.loadCancellable?.cancel()
             }
         )
     }
-
+    
+    private func printAllJointNames(in entity: Entity, level: Int = 0) {
+        let indent = String(repeating: "  ", count: level)
+        print("\(indent)- \(entity.name)")
+        
+        for child in entity.children {
+            printAllJointNames(in: child, level: level + 1)
+        }
+    }
+    
+    private func applySpineOffset(to bodyEntity: BodyTrackedEntity) {
+        guard let spineIndex = bodyEntity.jointNames.firstIndex(of: "spine_7_joint") else {
+            print("NO ENTITY")
+            return }
+        
+        var jointTransforms = bodyEntity.jointTransforms
+        var spineTransform = jointTransforms[spineIndex]
+        
+        let pitchDegrees: Float = -8.0
+        let pitchRadians = pitchDegrees * .pi / 180.0
+        let pitchRotation = simd_quatf(angle: pitchRadians, axis: SIMD3<Float>(1, 0, 0))
+        
+        spineTransform.rotation = simd_mul(pitchRotation, spineTransform.rotation)
+        jointTransforms[spineIndex] = spineTransform
+        bodyEntity.jointTransforms = jointTransforms
+    }
 
     private func presentAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -787,11 +816,14 @@ class ViewController: UIViewController, ARSessionDelegate {
     
     // MARK: - ARSessionDelegate (auto-capture on pose)
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-        return;
         guard autoCaptureEnabled else { return }
         // Don't auto-shoot while a preview is visible or during upload
         guard previewImageView == nil, !isUploading else { return }
         guard !countdownActive else { return }
+        
+        if let bodyEntity = bodyAnchor.children.first as? BodyTrackedEntity {
+                applySpineOffset(to: bodyEntity)
+        }
 
         let now = CACurrentMediaTime()
         guard now - lastAutoCaptureTime > autoCaptureCooldown else { return }

@@ -8,52 +8,34 @@
 
 /* Begin PBXBuildFile section */
 		23ACE38C2E5C5E9500567EDB /* ViewController-backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23ACE38B2E5C5E9500567EDB /* ViewController-backup.swift */; };
-		23ED9F372E9E547E00C924EC /* dressed-robot.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F322E9E547E00C924EC /* dressed-robot.usdz */; };
-		23ED9F382E9E547E00C924EC /* asrl-final.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F252E9E547E00C924EC /* asrl-final.usdz */; };
-		23ED9F392E9E547E00C924EC /* asrl-finished.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F262E9E547E00C924EC /* asrl-finished.usdz */; };
-		23ED9F3A2E9E547E00C924EC /* test-export.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F352E9E547E00C924EC /* test-export.usdz */; };
-		23ED9F3B2E9E547E00C924EC /* asrl+y.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F2E2E9E547E00C924EC /* asrl+y.usdz */; };
-		23ED9F3C2E9E547E00C924EC /* asrl-finished-fix.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F282E9E547E00C924EC /* asrl-finished-fix.usdz */; };
-		23ED9F3D2E9E547E00C924EC /* asrl-hollow-blender.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F2A2E9E547E00C924EC /* asrl-hollow-blender.usdz */; };
-		23ED9F3E2E9E547E00C924EC /* asrl-finished-2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F272E9E547E00C924EC /* asrl-finished-2.usdz */; };
-		23ED9F3F2E9E547E00C924EC /* cube.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F312E9E547E00C924EC /* cube.usdz */; };
-		23ED9F402E9E547E00C924EC /* asrl-hollow-thinner.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F2C2E9E547E00C924EC /* asrl-hollow-thinner.usdz */; };
-		23ED9F412E9E547E00C924EC /* asrl-hollow-single.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F2B2E9E547E00C924EC /* asrl-hollow-single.usdz */; };
-		23ED9F422E9E547E00C924EC /* asrl0.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F2F2E9E547E00C924EC /* asrl0.usdz */; };
-		23ED9F432E9E547E00C924EC /* dressed-robot2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F332E9E547E00C924EC /* dressed-robot2.usdz */; };
-		23ED9F442E9E547E00C924EC /* asrl-scripted.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F2D2E9E547E00C924EC /* asrl-scripted.usdz */; };
-		23ED9F452E9E547E00C924EC /* asrl1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F302E9E547E00C924EC /* asrl1.usdz */; };
-		23ED9F462E9E547E00C924EC /* robot.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F342E9E547E00C924EC /* robot.usdz */; };
-		23ED9F472E9E547E00C924EC /* asrl-hollow.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F292E9E547E00C924EC /* asrl-hollow.usdz */; };
-		23ED9F482E9E547E00C924EC /* asrl.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 23ED9F242E9E547E00C924EC /* asrl.usdz */; };
 		2F60E1DB22631E0F00357E98 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60E1DA22631E0F00357E98 /* AppDelegate.swift */; };
 		2F60E1DD22631E0F00357E98 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60E1DC22631E0F00357E98 /* ViewController.swift */; };
 		2F60E1E222631E0F00357E98 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2F60E1E022631E0F00357E98 /* Main.storyboard */; };
 		2F60E1E422631E0F00357E98 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F60E1E322631E0F00357E98 /* Assets.xcassets */; };
 		2F60E1E722631E0F00357E98 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2F60E1E522631E0F00357E98 /* LaunchScreen.storyboard */; };
 		718E55BC2289F8FF00A9B13B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 718E55BB2289F8FF00A9B13B /* README.md */; };
+		E5B09C002E9E8A19002238DD /* dressed-robot2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFC2E9E8A19002238DD /* dressed-robot2.usdz */; };
+		E5B09C012E9E8A19002238DD /* asrl-hollow.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF22E9E8A19002238DD /* asrl-hollow.usdz */; };
+		E5B09C022E9E8A19002238DD /* asrl1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF92E9E8A19002238DD /* asrl1.usdz */; };
+		E5B09C032E9E8A19002238DD /* asrl-hollow-blender.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF32E9E8A19002238DD /* asrl-hollow-blender.usdz */; };
+		E5B09C042E9E8A19002238DD /* asrl-hollow-single.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF42E9E8A19002238DD /* asrl-hollow-single.usdz */; };
+		E5B09C052E9E8A19002238DD /* robot.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFD2E9E8A19002238DD /* robot.usdz */; };
+		E5B09C062E9E8A19002238DD /* test-export.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFE2E9E8A19002238DD /* test-export.usdz */; };
+		E5B09C072E9E8A19002238DD /* asrl-scripted.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF62E9E8A19002238DD /* asrl-scripted.usdz */; };
+		E5B09C082E9E8A19002238DD /* asrl0.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF82E9E8A19002238DD /* asrl0.usdz */; };
+		E5B09C092E9E8A19002238DD /* asrl+y.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF72E9E8A19002238DD /* asrl+y.usdz */; };
+		E5B09C0A2E9E8A19002238DD /* asrl-final.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BEE2E9E8A19002238DD /* asrl-final.usdz */; };
+		E5B09C0B2E9E8A19002238DD /* asrl-hollow-thinner.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF52E9E8A19002238DD /* asrl-hollow-thinner.usdz */; };
+		E5B09C0C2E9E8A19002238DD /* cube.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFA2E9E8A19002238DD /* cube.usdz */; };
+		E5B09C0D2E9E8A19002238DD /* asrl-finished-fix.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF12E9E8A19002238DD /* asrl-finished-fix.usdz */; };
+		E5B09C0E2E9E8A19002238DD /* asrl.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BED2E9E8A19002238DD /* asrl.usdz */; };
+		E5B09C0F2E9E8A19002238DD /* asrl-finished-2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF02E9E8A19002238DD /* asrl-finished-2.usdz */; };
+		E5B09C102E9E8A19002238DD /* dressed-robot.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFB2E9E8A19002238DD /* dressed-robot.usdz */; };
+		E5B09C112E9E8A19002238DD /* asrl-finished.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BEF2E9E8A19002238DD /* asrl-finished.usdz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		23ACE38B2E5C5E9500567EDB /* ViewController-backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController-backup.swift"; sourceTree = "<group>"; };
-		23ED9F242E9E547E00C924EC /* asrl.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl.usdz; sourceTree = "<group>"; };
-		23ED9F252E9E547E00C924EC /* asrl-final.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-final.usdz"; sourceTree = "<group>"; };
-		23ED9F262E9E547E00C924EC /* asrl-finished.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished.usdz"; sourceTree = "<group>"; };
-		23ED9F272E9E547E00C924EC /* asrl-finished-2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished-2.usdz"; sourceTree = "<group>"; };
-		23ED9F282E9E547E00C924EC /* asrl-finished-fix.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished-fix.usdz"; sourceTree = "<group>"; };
-		23ED9F292E9E547E00C924EC /* asrl-hollow.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow.usdz"; sourceTree = "<group>"; };
-		23ED9F2A2E9E547E00C924EC /* asrl-hollow-blender.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-blender.usdz"; sourceTree = "<group>"; };
-		23ED9F2B2E9E547E00C924EC /* asrl-hollow-single.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-single.usdz"; sourceTree = "<group>"; };
-		23ED9F2C2E9E547E00C924EC /* asrl-hollow-thinner.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-thinner.usdz"; sourceTree = "<group>"; };
-		23ED9F2D2E9E547E00C924EC /* asrl-scripted.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-scripted.usdz"; sourceTree = "<group>"; };
-		23ED9F2E2E9E547E00C924EC /* asrl+y.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl+y.usdz"; sourceTree = "<group>"; };
-		23ED9F2F2E9E547E00C924EC /* asrl0.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl0.usdz; sourceTree = "<group>"; };
-		23ED9F302E9E547E00C924EC /* asrl1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl1.usdz; sourceTree = "<group>"; };
-		23ED9F312E9E547E00C924EC /* cube.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = cube.usdz; sourceTree = "<group>"; };
-		23ED9F322E9E547E00C924EC /* dressed-robot.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dressed-robot.usdz"; sourceTree = "<group>"; };
-		23ED9F332E9E547E00C924EC /* dressed-robot2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dressed-robot2.usdz"; sourceTree = "<group>"; };
-		23ED9F342E9E547E00C924EC /* robot.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = robot.usdz; sourceTree = "<group>"; };
-		23ED9F352E9E547E00C924EC /* test-export.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-export.usdz"; sourceTree = "<group>"; };
 		2F60E1D822631E0E00357E98 /* BodyDetection.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyDetection.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F60E1DA22631E0F00357E98 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2F60E1DC22631E0F00357E98 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -64,6 +46,24 @@
 		5DCA879A14A3351D9E9CEA98 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		718E55BB2289F8FF00A9B13B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		78F4E054153DD3A4202C28BA /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		E5B09BED2E9E8A19002238DD /* asrl.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl.usdz; sourceTree = "<group>"; };
+		E5B09BEE2E9E8A19002238DD /* asrl-final.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-final.usdz"; sourceTree = "<group>"; };
+		E5B09BEF2E9E8A19002238DD /* asrl-finished.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished.usdz"; sourceTree = "<group>"; };
+		E5B09BF02E9E8A19002238DD /* asrl-finished-2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished-2.usdz"; sourceTree = "<group>"; };
+		E5B09BF12E9E8A19002238DD /* asrl-finished-fix.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished-fix.usdz"; sourceTree = "<group>"; };
+		E5B09BF22E9E8A19002238DD /* asrl-hollow.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow.usdz"; sourceTree = "<group>"; };
+		E5B09BF32E9E8A19002238DD /* asrl-hollow-blender.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-blender.usdz"; sourceTree = "<group>"; };
+		E5B09BF42E9E8A19002238DD /* asrl-hollow-single.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-single.usdz"; sourceTree = "<group>"; };
+		E5B09BF52E9E8A19002238DD /* asrl-hollow-thinner.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-thinner.usdz"; sourceTree = "<group>"; };
+		E5B09BF62E9E8A19002238DD /* asrl-scripted.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-scripted.usdz"; sourceTree = "<group>"; };
+		E5B09BF72E9E8A19002238DD /* asrl+y.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl+y.usdz"; sourceTree = "<group>"; };
+		E5B09BF82E9E8A19002238DD /* asrl0.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl0.usdz; sourceTree = "<group>"; };
+		E5B09BF92E9E8A19002238DD /* asrl1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl1.usdz; sourceTree = "<group>"; };
+		E5B09BFA2E9E8A19002238DD /* cube.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = cube.usdz; sourceTree = "<group>"; };
+		E5B09BFB2E9E8A19002238DD /* dressed-robot.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dressed-robot.usdz"; sourceTree = "<group>"; };
+		E5B09BFC2E9E8A19002238DD /* dressed-robot2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dressed-robot2.usdz"; sourceTree = "<group>"; };
+		E5B09BFD2E9E8A19002238DD /* robot.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = robot.usdz; sourceTree = "<group>"; };
+		E5B09BFE2E9E8A19002238DD /* test-export.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-export.usdz"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -81,31 +81,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		23ED9F362E9E547E00C924EC /* character */ = {
-			isa = PBXGroup;
-			children = (
-				23ED9F242E9E547E00C924EC /* asrl.usdz */,
-				23ED9F252E9E547E00C924EC /* asrl-final.usdz */,
-				23ED9F262E9E547E00C924EC /* asrl-finished.usdz */,
-				23ED9F272E9E547E00C924EC /* asrl-finished-2.usdz */,
-				23ED9F282E9E547E00C924EC /* asrl-finished-fix.usdz */,
-				23ED9F292E9E547E00C924EC /* asrl-hollow.usdz */,
-				23ED9F2A2E9E547E00C924EC /* asrl-hollow-blender.usdz */,
-				23ED9F2B2E9E547E00C924EC /* asrl-hollow-single.usdz */,
-				23ED9F2C2E9E547E00C924EC /* asrl-hollow-thinner.usdz */,
-				23ED9F2D2E9E547E00C924EC /* asrl-scripted.usdz */,
-				23ED9F2E2E9E547E00C924EC /* asrl+y.usdz */,
-				23ED9F2F2E9E547E00C924EC /* asrl0.usdz */,
-				23ED9F302E9E547E00C924EC /* asrl1.usdz */,
-				23ED9F312E9E547E00C924EC /* cube.usdz */,
-				23ED9F322E9E547E00C924EC /* dressed-robot.usdz */,
-				23ED9F332E9E547E00C924EC /* dressed-robot2.usdz */,
-				23ED9F342E9E547E00C924EC /* robot.usdz */,
-				23ED9F352E9E547E00C924EC /* test-export.usdz */,
-			);
-			path = character;
-			sourceTree = "<group>";
-		};
 		29819F71B3026A375E893049 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
@@ -144,7 +119,7 @@
 				2F60E1E322631E0F00357E98 /* Assets.xcassets */,
 				2F60E1E522631E0F00357E98 /* LaunchScreen.storyboard */,
 				2F60E1EB22631E0F00357E98 /* Info.plist */,
-				23ED9F362E9E547E00C924EC /* character */,
+				E5B09BFF2E9E8A19002238DD /* character */,
 			);
 			path = BodyDetection;
 			sourceTree = "<group>";
@@ -156,6 +131,31 @@
 			);
 			name = LICENSE;
 			path = .;
+			sourceTree = "<group>";
+		};
+		E5B09BFF2E9E8A19002238DD /* character */ = {
+			isa = PBXGroup;
+			children = (
+				E5B09BED2E9E8A19002238DD /* asrl.usdz */,
+				E5B09BEE2E9E8A19002238DD /* asrl-final.usdz */,
+				E5B09BEF2E9E8A19002238DD /* asrl-finished.usdz */,
+				E5B09BF02E9E8A19002238DD /* asrl-finished-2.usdz */,
+				E5B09BF12E9E8A19002238DD /* asrl-finished-fix.usdz */,
+				E5B09BF22E9E8A19002238DD /* asrl-hollow.usdz */,
+				E5B09BF32E9E8A19002238DD /* asrl-hollow-blender.usdz */,
+				E5B09BF42E9E8A19002238DD /* asrl-hollow-single.usdz */,
+				E5B09BF52E9E8A19002238DD /* asrl-hollow-thinner.usdz */,
+				E5B09BF62E9E8A19002238DD /* asrl-scripted.usdz */,
+				E5B09BF72E9E8A19002238DD /* asrl+y.usdz */,
+				E5B09BF82E9E8A19002238DD /* asrl0.usdz */,
+				E5B09BF92E9E8A19002238DD /* asrl1.usdz */,
+				E5B09BFA2E9E8A19002238DD /* cube.usdz */,
+				E5B09BFB2E9E8A19002238DD /* dressed-robot.usdz */,
+				E5B09BFC2E9E8A19002238DD /* dressed-robot2.usdz */,
+				E5B09BFD2E9E8A19002238DD /* robot.usdz */,
+				E5B09BFE2E9E8A19002238DD /* test-export.usdz */,
+			);
+			path = character;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -221,26 +221,26 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				23ED9F372E9E547E00C924EC /* dressed-robot.usdz in Resources */,
-				23ED9F382E9E547E00C924EC /* asrl-final.usdz in Resources */,
-				23ED9F392E9E547E00C924EC /* asrl-finished.usdz in Resources */,
-				23ED9F3A2E9E547E00C924EC /* test-export.usdz in Resources */,
-				23ED9F3B2E9E547E00C924EC /* asrl+y.usdz in Resources */,
-				23ED9F3C2E9E547E00C924EC /* asrl-finished-fix.usdz in Resources */,
-				23ED9F3D2E9E547E00C924EC /* asrl-hollow-blender.usdz in Resources */,
-				23ED9F3E2E9E547E00C924EC /* asrl-finished-2.usdz in Resources */,
-				23ED9F3F2E9E547E00C924EC /* cube.usdz in Resources */,
-				23ED9F402E9E547E00C924EC /* asrl-hollow-thinner.usdz in Resources */,
-				23ED9F412E9E547E00C924EC /* asrl-hollow-single.usdz in Resources */,
-				23ED9F422E9E547E00C924EC /* asrl0.usdz in Resources */,
-				23ED9F432E9E547E00C924EC /* dressed-robot2.usdz in Resources */,
-				23ED9F442E9E547E00C924EC /* asrl-scripted.usdz in Resources */,
-				23ED9F452E9E547E00C924EC /* asrl1.usdz in Resources */,
-				23ED9F462E9E547E00C924EC /* robot.usdz in Resources */,
-				23ED9F472E9E547E00C924EC /* asrl-hollow.usdz in Resources */,
-				23ED9F482E9E547E00C924EC /* asrl.usdz in Resources */,
 				2F60E1E722631E0F00357E98 /* LaunchScreen.storyboard in Resources */,
 				718E55BC2289F8FF00A9B13B /* README.md in Resources */,
+				E5B09C002E9E8A19002238DD /* dressed-robot2.usdz in Resources */,
+				E5B09C012E9E8A19002238DD /* asrl-hollow.usdz in Resources */,
+				E5B09C022E9E8A19002238DD /* asrl1.usdz in Resources */,
+				E5B09C032E9E8A19002238DD /* asrl-hollow-blender.usdz in Resources */,
+				E5B09C042E9E8A19002238DD /* asrl-hollow-single.usdz in Resources */,
+				E5B09C052E9E8A19002238DD /* robot.usdz in Resources */,
+				E5B09C062E9E8A19002238DD /* test-export.usdz in Resources */,
+				E5B09C072E9E8A19002238DD /* asrl-scripted.usdz in Resources */,
+				E5B09C082E9E8A19002238DD /* asrl0.usdz in Resources */,
+				E5B09C092E9E8A19002238DD /* asrl+y.usdz in Resources */,
+				E5B09C0A2E9E8A19002238DD /* asrl-final.usdz in Resources */,
+				E5B09C0B2E9E8A19002238DD /* asrl-hollow-thinner.usdz in Resources */,
+				E5B09C0C2E9E8A19002238DD /* cube.usdz in Resources */,
+				E5B09C0D2E9E8A19002238DD /* asrl-finished-fix.usdz in Resources */,
+				E5B09C0E2E9E8A19002238DD /* asrl.usdz in Resources */,
+				E5B09C0F2E9E8A19002238DD /* asrl-finished-2.usdz in Resources */,
+				E5B09C102E9E8A19002238DD /* dressed-robot.usdz in Resources */,
+				E5B09C112E9E8A19002238DD /* asrl-finished.usdz in Resources */,
 				2F60E1E422631E0F00357E98 /* Assets.xcassets in Resources */,
 				2F60E1E222631E0F00357E98 /* Main.storyboard in Resources */,
 			);
