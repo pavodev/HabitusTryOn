@@ -189,7 +189,12 @@ class ViewController: UIViewController, ARSessionDelegate {
     private let modelYScale: Float = 0.0095 // Slight vertical shrink
     private let modelZScale: Float = 0.0095  // 20% narrower (0.01 * 0.8)
 
-
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Forearm occlusion cylinders
+    private var leftForearmOccluder: ModelEntity?
+    private var rightForearmOccluder: ModelEntity?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCaptureButton()
@@ -374,8 +379,12 @@ class ViewController: UIViewController, ARSessionDelegate {
                     t.rotation = simd_mul(yaw, t.rotation)
                 }
                 bodyEntity.transform = t
-                
+
+                // Load occlusion mesh
+                // self.loadOcclusionMesh(for: bodyEntity)
+
                 self.bodyAnchor.addChild(bodyEntity)
+                self.setupForearmOccluders(bodyEntity: bodyEntity)
                 
                 print("📋 Available joint names:", bodyEntity.jointNames)
                 self.printAllJointNames(in: bodyEntity)
@@ -384,6 +393,99 @@ class ViewController: UIViewController, ARSessionDelegate {
             }
         )
     }
+
+
+private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
+        guard let leftOccluder = leftForearmOccluder,
+              let rightOccluder = rightForearmOccluder else { return }
+
+        // Get indices of forearm joints
+        guard let leftForearmIndex = bodyAnchor.skeleton.definition.jointNames.firstIndex(of: "left_forearm_joint"),
+              let rightForearmIndex = bodyAnchor.skeleton.definition.jointNames.firstIndex(of: "right_forearm_joint") else {
+            return
+        }
+
+        // Get joint model transforms
+        let leftJointTransform = bodyAnchor.skeleton.jointModelTransforms[leftForearmIndex]
+        let rightJointTransform = bodyAnchor.skeleton.jointModelTransforms[rightForearmIndex]
+
+        // Convert to world transform
+        let leftWorldTransform = simd_mul(bodyAnchor.transform, leftJointTransform)
+        let rightWorldTransform = simd_mul(bodyAnchor.transform, rightJointTransform)
+
+        // Update position and orientation of occluders
+        leftOccluder.position = SIMD3<Float>(leftWorldTransform.columns.3.x,
+                                             leftWorldTransform.columns.3.y,
+                                             leftWorldTransform.columns.3.z)
+        leftOccluder.orientation = simd_quatf(leftWorldTransform)
+
+        rightOccluder.position = SIMD3<Float>(rightWorldTransform.columns.3.x,
+                                              rightWorldTransform.columns.3.y,
+                                              rightWorldTransform.columns.3.z)
+        rightOccluder.orientation = simd_quatf(rightWorldTransform)
+
+        // Adjust cylinder height orientation so it matches forearm axis roughly
+        // Here a simple approach: rotate cylinder by -90 deg around X to align vertical axis to forearm axis
+        // Adjust if needed for your model precision
+
+        let rotationAdjustment = simd_quatf(angle: -.pi/2, axis: SIMD3<Float>(1, 0, 0))
+        leftOccluder.orientation = simd_mul(leftOccluder.orientation, rotationAdjustment)
+        rightOccluder.orientation = simd_mul(rightOccluder.orientation, rotationAdjustment)
+    }
+
+     private func setupForearmOccluders(bodyEntity: BodyTrackedEntity) {
+        // Remove old occluders if any
+        leftForearmOccluder?.removeFromParent()
+        rightForearmOccluder?.removeFromParent()
+
+        // Create cylinders for left and right forearms
+        let radius: Float = 0.035
+        let height: Float = 0.20
+
+        let leftCylinder = ModelEntity(mesh: .generateCylinder(height: height, radius: radius))
+        leftCylinder.name = "leftForearmOccluder"
+        leftCylinder.model?.materials = [OcclusionMaterial()]
+
+        let rightCylinder = ModelEntity(mesh: .generateCylinder(height: height, radius: radius))
+        rightCylinder.name = "rightForearmOccluder"
+        rightCylinder.model?.materials = [OcclusionMaterial()]
+
+        // Add to the body anchor for now; positions will be updated on each frame
+        bodyAnchor.addChild(leftCylinder)
+        bodyAnchor.addChild(rightCylinder)
+
+        self.leftForearmOccluder = leftCylinder
+        self.rightForearmOccluder = rightCylinder
+    }
+
+    private func loadOcclusionMesh(for parentEntity: Entity) {
+        Entity.loadAsync(named: "asrl-hollow-thinner").sink { completion in
+            if case let .failure(error) = completion {
+                print("Error loading occlusion model: \(error)")
+            }
+        } receiveValue: { [weak self] occlusionEntity in
+            guard let self = self else { return }
+            
+            // Apply OcclusionMaterial to all mesh parts
+            self.visitEntity(occlusionEntity) { entity in
+                if var modelComponent = entity.components[ModelComponent.self] {
+                    modelComponent.materials = [OcclusionMaterial()]
+                    entity.components.set(modelComponent)
+                }
+            }
+
+            // Scale the occlusion mesh (slightly smaller to avoid over-occlusion)
+            var t = occlusionEntity.transform
+            t.scale = SIMD3<Float>(0.95, 0.95, 0.95)
+            occlusionEntity.transform = t
+
+            // Add occlusion mesh as child to the parent entity
+            parentEntity.addChild(occlusionEntity)
+        }
+        .store(in: &cancellables) // Make sure you have a Set<AnyCancellable> property in your class
+    }
+
+
     
     private func printAllJointNames(in entity: Entity, level: Int = 0) {
         let indent = String(repeating: "  ", count: level)
@@ -821,18 +923,20 @@ class ViewController: UIViewController, ARSessionDelegate {
         guard previewImageView == nil, !isUploading else { return }
         guard !countdownActive else { return }
         
-        if let bodyEntity = bodyAnchor.children.first as? BodyTrackedEntity {
-                applySpineOffset(to: bodyEntity)
-        }
+        // if let bodyEntity = bodyAnchor.children.first as? BodyTrackedEntity {
+        //         applySpineOffset(to: bodyEntity)
+        // }
 
         let now = CACurrentMediaTime()
         guard now - lastAutoCaptureTime > autoCaptureCooldown else { return }
 
         for anchor in anchors {
             guard let body = anchor as? ARBodyAnchor else { continue }
+            guard let arBodyAnchor = anchor as? ARBodyAnchor else { continue }
 
             // (Custom geometry occluders removed per request)
-
+            updateForearmOccluderPositions(for: arBodyAnchor)
+            
             // Choose which pose to use:
             let poseDetected = poseDetector.isTPose(body) // or: poseDetector.isTPose(body)
 
