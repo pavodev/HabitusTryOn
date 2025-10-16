@@ -194,6 +194,21 @@ class ViewController: UIViewController, ARSessionDelegate {
     // Forearm occlusion cylinders
     private var leftForearmOccluder: ModelEntity?
     private var rightForearmOccluder: ModelEntity?
+    // Optional: visual debug overlays to see occluder placement
+    private let occluderDebugEnabled = true
+    private let occluderMaterialIsVisibleForDebug = true
+    // Tuning for occluder sizing/fit relative to sleeves (meters)
+    private let forearmBaseRadius: Float = 0.030             // base radius in meters (increases visibility)
+    private let forearmBaseHeight: Float = 0.15              // base height used for scaling
+    private let forearmRadiusMultiplier: Float = 1.2         // widen cylinders
+    private let forearmLengthMultiplier: Float = 1        // extend beyond elbow/wrist
+    private let forearmAxialExtend: Float = 0             // endpoint extension each side
+    private var leftForearmDebug: ModelEntity?
+    private var rightForearmDebug: ModelEntity?
+    // Spine debug cube (to verify occlusion at torso)
+    private var spineDebugCube: ModelEntity?
+    private let spineCubeVisible = false
+    private let spineCubeSize: Float = 0.12
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -385,6 +400,7 @@ class ViewController: UIViewController, ARSessionDelegate {
 
                 self.bodyAnchor.addChild(bodyEntity)
                 self.setupForearmOccluders(bodyEntity: bodyEntity)
+                self.setupSpineDebugCube()
                 
                 print("📋 Available joint names:", bodyEntity.jointNames)
                 self.printAllJointNames(in: bodyEntity)
@@ -393,62 +409,137 @@ class ViewController: UIViewController, ARSessionDelegate {
             }
         )
     }
+    private func setupSpineDebugCube() {
+        spineDebugCube?.removeFromParent()
+        guard spineCubeVisible else { return }
+        let mesh = MeshResource.generateBox(size: spineCubeSize)
+        let material = SimpleMaterial(color: .systemRed, roughness: 0.2, isMetallic: false)
+        let cube = ModelEntity(mesh: mesh, materials: [material])
+        cube.name = "spineDebugCube"
+        bodyAnchor.addChild(cube)
+        spineDebugCube = cube
+    }
 
 
-private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
+    private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
+        print("Updating forearm occluder positions")
         guard let leftOccluder = leftForearmOccluder,
               let rightOccluder = rightForearmOccluder else { return }
 
-        // Get indices of forearm joints
-        guard let leftForearmIndex = bodyAnchor.skeleton.definition.jointNames.firstIndex(of: "left_forearm_joint"),
-              let rightForearmIndex = bodyAnchor.skeleton.definition.jointNames.firstIndex(of: "right_forearm_joint") else {
-            return
+        let jointNames = bodyAnchor.skeleton.definition.jointNames
+
+        func index(ofAny names: [String]) -> Int? {
+            for name in names {
+                if let idx = jointNames.firstIndex(of: name) { return idx }
+            }
+            return nil
         }
 
-        // Get joint model transforms
-        let leftJointTransform = bodyAnchor.skeleton.jointModelTransforms[leftForearmIndex]
-        let rightJointTransform = bodyAnchor.skeleton.jointModelTransforms[rightForearmIndex]
+        // Prefer typical names; include fallbacks for OS/model variations
+        guard
+            let lElbowIdx = index(ofAny: ["left_forearm_joint", "left_elbow_joint"]),
+            let lWristIdx = index(ofAny: ["left_hand_joint", "left_wrist_joint"]),
+            let rElbowIdx = index(ofAny: ["right_forearm_joint", "right_elbow_joint"]),
+            let rWristIdx = index(ofAny: ["right_hand_joint", "right_wrist_joint"])
+        else { return }
 
-        // Convert to world transform
-        let leftWorldTransform = simd_mul(bodyAnchor.transform, leftJointTransform)
-        let rightWorldTransform = simd_mul(bodyAnchor.transform, rightJointTransform)
+        func localTransform(for idx: Int) -> simd_float4x4 {
+            bodyAnchor.skeleton.jointModelTransforms[idx]
+        }
 
-        // Update position and orientation of occluders
-        leftOccluder.position = SIMD3<Float>(leftWorldTransform.columns.3.x,
-                                             leftWorldTransform.columns.3.y,
-                                             leftWorldTransform.columns.3.z)
-        leftOccluder.orientation = simd_quatf(leftWorldTransform)
+        func position(from t: simd_float4x4) -> SIMD3<Float> {
+            SIMD3<Float>(t.columns.3.x, t.columns.3.y, t.columns.3.z)
+        }
 
-        rightOccluder.position = SIMD3<Float>(rightWorldTransform.columns.3.x,
-                                              rightWorldTransform.columns.3.y,
-                                              rightWorldTransform.columns.3.z)
-        rightOccluder.orientation = simd_quatf(rightWorldTransform)
+        // World-space endpoints
+        // Use LOCAL space (relative to bodyAnchor), since occluders are parented under bodyAnchor
+        let lElbowPos = position(from: localTransform(for: lElbowIdx))
+        let lWristPos = position(from: localTransform(for: lWristIdx))
+        let rElbowPos = position(from: localTransform(for: rElbowIdx))
+        let rWristPos = position(from: localTransform(for: rWristIdx))
 
-        // Adjust cylinder height orientation so it matches forearm axis roughly
-        // Here a simple approach: rotate cylinder by -90 deg around X to align vertical axis to forearm axis
-        // Adjust if needed for your model precision
+        func alignCylinder(_ cyl: ModelEntity, from a: SIMD3<Float>, to b: SIMD3<Float>) {
+            let defaultAxisY = SIMD3<Float>(0, 1, 0) // cylinder up-axis
+            var direction = b - a
+            var length = simd_length(direction)
+            guard length > 0.001 else { return }
+            direction /= length
 
-        let rotationAdjustment = simd_quatf(angle: -.pi/2, axis: SIMD3<Float>(1, 0, 0))
-        leftOccluder.orientation = simd_mul(leftOccluder.orientation, rotationAdjustment)
-        rightOccluder.orientation = simd_mul(rightOccluder.orientation, rotationAdjustment)
+            // Extend endpoints slightly beyond elbow/wrist to peek out of sleeves
+            let extend = min(forearmAxialExtend, length * 0.49)
+            let aExt = a - direction * extend
+            let bExt = b + direction * extend
+            let extendedLength = simd_length(bExt - aExt)
+
+            // Midpoint position
+            cyl.position = (aExt + bExt) * 0.5
+
+            // Rotation: map +Y to the forearm direction
+            let dotVal = max(-1.0 as Float, min(1.0 as Float, simd_dot(defaultAxisY, direction)))
+            if abs(dotVal - 1) < 1e-4 {
+                cyl.orientation = simd_quatf(angle: 0, axis: defaultAxisY)
+            } else if abs(dotVal + 1) < 1e-4 {
+                cyl.orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(1, 0, 0))
+            } else {
+                let rotAxis = simd_normalize(simd_cross(defaultAxisY, direction))
+                let rotAngle = acos(dotVal)
+                cyl.orientation = simd_quatf(angle: rotAngle, axis: rotAxis)
+            }
+
+            // Scale height (Y) to match segment length; keep radius unchanged
+            let baseHeight: Float = forearmBaseHeight // matches setupForearmOccluders
+            let scaleY = max(0.01, (extendedLength * forearmLengthMultiplier) / baseHeight)
+            let scaleXZ = max(0.01, forearmRadiusMultiplier)
+            cyl.scale = SIMD3<Float>(scaleXZ, scaleY, scaleXZ)
+        }
+
+        alignCylinder(leftOccluder, from: lElbowPos, to: lWristPos)
+        alignCylinder(rightOccluder, from: rElbowPos, to: rWristPos)
     }
 
      private func setupForearmOccluders(bodyEntity: BodyTrackedEntity) {
         // Remove old occluders if any
         leftForearmOccluder?.removeFromParent()
         rightForearmOccluder?.removeFromParent()
+        leftForearmDebug?.removeFromParent()
+        rightForearmDebug?.removeFromParent()
 
         // Create cylinders for left and right forearms
-        let radius: Float = 0.035
-        let height: Float = 0.20
+        let radius: Float = forearmBaseRadius
+        let height: Float = forearmBaseHeight
 
         let leftCylinder = ModelEntity(mesh: .generateCylinder(height: height, radius: radius))
         leftCylinder.name = "leftForearmOccluder"
-        leftCylinder.model?.materials = [OcclusionMaterial()]
+        if occluderMaterialIsVisibleForDebug {
+            leftCylinder.model?.materials = [SimpleMaterial(color: UIColor.systemBlue.withAlphaComponent(0.9), isMetallic: false)]
+        } else {
+            leftCylinder.model?.materials = [OcclusionMaterial()]
+        }
 
         let rightCylinder = ModelEntity(mesh: .generateCylinder(height: height, radius: radius))
         rightCylinder.name = "rightForearmOccluder"
-        rightCylinder.model?.materials = [OcclusionMaterial()]
+        if occluderMaterialIsVisibleForDebug {
+            rightCylinder.model?.materials = [SimpleMaterial(color: UIColor.systemBlue.withAlphaComponent(0.9), isMetallic: false)]
+        } else {
+            rightCylinder.model?.materials = [OcclusionMaterial()]
+        }
+
+        if occluderDebugEnabled {
+            // Add slightly larger transparent cylinders as visual overlays
+            let debugRadius = radius * 1.6
+            let debugMat = SimpleMaterial(color: UIColor.systemGreen.withAlphaComponent(0.9), isMetallic: false)
+
+            let leftDebug = ModelEntity(mesh: .generateCylinder(height: height, radius: debugRadius), materials: [debugMat])
+            leftDebug.name = "leftForearmOccluderDebug"
+            leftCylinder.addChild(leftDebug)
+
+            let rightDebug = ModelEntity(mesh: .generateCylinder(height: height, radius: debugRadius), materials: [debugMat])
+            rightDebug.name = "rightForearmOccluderDebug"
+            rightCylinder.addChild(rightDebug)
+
+            self.leftForearmDebug = leftDebug
+            self.rightForearmDebug = rightDebug
+        }
 
         // Add to the body anchor for now; positions will be updated on each frame
         bodyAnchor.addChild(leftCylinder)
@@ -485,7 +576,15 @@ private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
         .store(in: &cancellables) // Make sure you have a Set<AnyCancellable> property in your class
     }
 
-
+    private func updateSpineDebugCube(for bodyAnchor: ARBodyAnchor) {
+        guard let cube = spineDebugCube else { return }
+        let jointNames = bodyAnchor.skeleton.definition.jointNames
+        guard let spineIdx = jointNames.firstIndex(of: "spine_5_joint") else { return }
+        // Use local space (relative to bodyAnchor)
+        let local = bodyAnchor.skeleton.jointModelTransforms[spineIdx]
+        cube.position = SIMD3<Float>(local.columns.3.x, local.columns.3.y, local.columns.3.z)
+        cube.orientation = simd_quatf(local)
+    }
     
     private func printAllJointNames(in entity: Entity, level: Int = 0) {
         let indent = String(repeating: "  ", count: level)
@@ -934,8 +1033,9 @@ private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
             guard let body = anchor as? ARBodyAnchor else { continue }
             guard let arBodyAnchor = anchor as? ARBodyAnchor else { continue }
 
-            // (Custom geometry occluders removed per request)
+            // Update occluders and debug cube transforms
             updateForearmOccluderPositions(for: arBodyAnchor)
+            updateSpineDebugCube(for: arBodyAnchor)
             
             // Choose which pose to use:
             let poseDetected = poseDetector.isTPose(body) // or: poseDetector.isTPose(body)
