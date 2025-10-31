@@ -1,7 +1,7 @@
 import UIKit
 import RealityKit
 import ARKit
-import Combine
+import Combine // (Remove if unused elsewhere)
 import Photos
 
 /// Detects simple poses from an ARBodyAnchor.
@@ -14,7 +14,7 @@ final class PoseDetector {
         guard let i = index(named: exact) else { return nil }
         return worldPosition(of: i, for: anchor)
     }
-    
+
     private func index(named exact: String) -> Int? {
         ARSkeletonDefinition.defaultBody3D.jointNames.firstIndex(of: exact)
     }
@@ -43,16 +43,16 @@ final class PoseDetector {
             let ri = index(named: "right_hand_joint") ?? findIndex(containing: "right_hand"),
             let hi = index(named: "head_joint")       ?? findIndex(containing: "head")
         else { return false }
-        
+
         let LW = worldPosition(of: li, for: anchor)
         let RW = worldPosition(of: ri, for: anchor)
         let HD = worldPosition(of: hi, for: anchor)
-        
+
         let margin: Float = 0.02 // ~2 cm
         return (LW.y > HD.y + margin) && (RW.y > HD.y + margin)
     }
 
-    /// Simple T-pose: wrists roughly at shoulder height and extended outwards.
+    // (Kept for future use)
     func isTPose(_ anchor: ARBodyAnchor) -> Bool {
         guard
             let lsi = index(named: "left_shoulder_1_joint")  ?? findIndex(containing: "left_shoulder"),
@@ -66,9 +66,8 @@ final class PoseDetector {
         let LW = worldPosition(of: lwi, for: anchor)
         let RW = worldPosition(of: rwi, for: anchor)
 
-        // Vertical tolerance + horizontal spread in XZ plane
-        let yTol: Float = 0.10  // ~10 cm
-        let rMin: Float = 0.20  // >= 20 cm away from shoulder
+        let yTol: Float = 0.10
+        let rMin: Float = 0.20
 
         let leftHoriz  = hypot(LS.x - LW.x, LS.z - LW.z)
         let rightHoriz = hypot(RS.x - RW.x, RS.z - RW.z)
@@ -77,8 +76,8 @@ final class PoseDetector {
         let rightOK = abs(RW.y - RS.y) < yTol && rightHoriz > rMin
         return leftOK && rightOK
     }
-    
-    // Detect a thumbs-up for one hand using joint world positions.
+
+    // (Kept for future use)
     private func isThumbsUp(prefix: String, anchor: ARBodyAnchor) -> Bool {
         guard
             let palm    = pos("\(prefix)_hand_joint", for: anchor),
@@ -92,17 +91,14 @@ final class PoseDetector {
         let up = SIMD3<Float>(0, 1, 0)
         let thumbVec = thumb - palm
         let thumbLen = simd_length(thumbVec)
-        if thumbLen < 0.05 { return false } // at least ~5 cm away from palm
+        if thumbLen < 0.05 { return false }
 
-        // Thumb should point roughly upwards in world space
         let cosUp = simd_dot(simd_normalize(thumbVec), up)
-        if cosUp < 0.65 { return false } // within ~49° of vertical
+        if cosUp < 0.65 { return false }
 
-        // Thumb clearly above other fingertips
         let maxOtherY = max(index.y, middle.y, ring.y, pinky.y)
-        if !(thumb.y > maxOtherY + 0.04) { return false } // ≥4 cm above others
+        if !(thumb.y > maxOtherY + 0.04) { return false }
 
-        // Other fingers should not be up high (simple curl proxy)
         let curlTol: Float = 0.03
         let othersDown = (index.y < palm.y + curlTol) &&
                          (middle.y < palm.y + curlTol) &&
@@ -112,7 +108,6 @@ final class PoseDetector {
         return othersDown
     }
 
-    /// Public API: thumbs up on a specific hand or either hand.
     func isThumbsUp(_ anchor: ARBodyAnchor, hand: Hand = .either) -> Bool {
         switch hand {
         case .left:  return isThumbsUp(prefix: "left",  anchor: anchor)
@@ -127,23 +122,16 @@ final class PoseDetector {
 class ViewController: UIViewController, ARSessionDelegate {
     @IBOutlet var arView: ARView!
 
-    // Keep a reference so we can cancel the load publisher
-    private var loadCancellable: AnyCancellable?
-
-    // The .body anchor that RealityKit will drive for us
-    private let bodyAnchor = AnchorEntity(.body)
-
     // Capture button (circular shutter style)
     private let captureButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.backgroundColor = .white              // filled inner circle
-        btn.layer.cornerRadius = 36               // will be 72x72, so radius = 36
-        btn.layer.borderWidth = 3                 // subtle outer ring
+        btn.backgroundColor = .white
+        btn.layer.cornerRadius = 36
+        btn.layer.borderWidth = 3
         btn.layer.borderColor = UIColor(white: 0.85, alpha: 1.0).cgColor
-        btn.setTitle(nil, for: .normal)           // no text
-        btn.tintColor = .clear                    // no symbol by default
-        // subtle shadow for separation
+        btn.setTitle(nil, for: .normal)
+        btn.tintColor = .clear
         btn.layer.shadowColor = UIColor.black.cgColor
         btn.layer.shadowOpacity = 0.25
         btn.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -154,64 +142,444 @@ class ViewController: UIViewController, ARSessionDelegate {
 
     // Preview overlay
     private var previewImageView: UIImageView?
-    private var saveButton: UIButton?
-    private var retakeButton: UIButton?
-    // Prevent double-taps while uploading
     private var isUploading = false
-    // Spinner shown inside the Save button while uploading
-    private var saveSpinner: UIActivityIndicatorView?
-    // --- Auto-capture countdown state ---
+    private var isShowingQROverlay = false
+
+    // HUD hint while detecting pose
+    private var hintContainer: UIView?
+    private var hintLabel: UILabel?
+    private var hintProgress: UIProgressView?
+    private var hintSecondsBadge: UILabel?
+    private var hintStack: UIStackView?
+
+    // Countdown state
     private var countdownTimer: DispatchSourceTimer?
     private var countdownRemaining = 0
+    private var countdownRemainingQR = 30;
     private var countdownLabel: UILabel?
     private var countdownActive: Bool { countdownTimer != nil }
-    
-    // --- Auto-capture pose detection state ---
+    // private let countdownHaptic = UIImpactFeedbackGenerator(style: .light)
+
+    // Pose detection & control
     private let poseDetector = PoseDetector()
-    private var poseHoldFrames = 0
-    private let requiredHoldFrames = 8        // ~0.25s at 60 fps
+    private var poseHoldStartTime: CFTimeInterval? = nil
+    private let requiredHoldDuration: CFTimeInterval = 3.0
     private var lastAutoCaptureTime = 0.0
     private let autoCaptureCooldown: Double = 4.0
-    private var autoCaptureEnabled = true      // toggle as needed
+    private var autoCaptureEnabled = true
+    private var poseImageView: UIImageView?
+    
+    // UI epoch + explicit HUD state
+    private var uiEpoch: Int = 0
+    private enum HUDMode { case idle, holding, hidden }
+    private var hudMode: HUDMode = .idle
 
-    // Networking client injected from Keychain (created in viewDidLoad)
+    // MARK: - HUD
+
+    private func ensureHintHUD() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { self.ensureHintHUD() }
+            return
+        }
+        guard hintContainer == nil else { return }
+
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        container.layer.cornerRadius = 14
+        container.clipsToBounds = true
+
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.textAlignment = .center
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.80
+        label.allowsDefaultTighteningForTruncation = true
+
+        let progress = UIProgressView(progressViewStyle: .default)
+        progress.translatesAutoresizingMaskIntoConstraints = false
+        progress.isHidden = true
+        progress.progress = 0
+        progress.transform = CGAffineTransform(scaleX: 1, y: 3.0)
+        progress.layer.cornerRadius = 4
+        progress.clipsToBounds = true
+        let progressHeight = progress.heightAnchor.constraint(equalToConstant: 6)
+        progressHeight.priority = .defaultHigh
+        progressHeight.isActive = true
+
+        let secBadge = UILabel()
+        secBadge.translatesAutoresizingMaskIntoConstraints = false
+        secBadge.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        secBadge.textColor = .white
+        secBadge.font = .systemFont(ofSize: 18, weight: .bold)
+        secBadge.textAlignment = .center
+        secBadge.isHidden = true
+        secBadge.layer.cornerRadius = 8
+        secBadge.clipsToBounds = true
+        NSLayoutConstraint.activate([
+            secBadge.widthAnchor.constraint(equalToConstant: 40),
+            secBadge.heightAnchor.constraint(equalToConstant: 30)
+        ])
+
+        let hstack = UIStackView(arrangedSubviews: [label, secBadge])
+        hstack.translatesAutoresizingMaskIntoConstraints = false
+        hstack.axis = .horizontal
+        hstack.alignment = .center
+        hstack.spacing = 8
+
+        let vstack = UIStackView(arrangedSubviews: [hstack, progress])
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        vstack.axis = .vertical
+        vstack.alignment = .fill
+        vstack.spacing = 10
+
+        container.addSubview(vstack)
+        NSLayoutConstraint.activate([
+            vstack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            vstack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            vstack.topAnchor.constraint(equalTo: container.topAnchor, constant: 14),
+            vstack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -14)
+        ])
+
+        view.addSubview(container)
+        NSLayoutConstraint.activate([
+            container.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            container.widthAnchor.constraint(lessThanOrEqualToConstant: 340),
+            container.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
+        ])
+        
+        // Create pose illustration at the bottom
+        let poseImage = UIImageView()
+        poseImage.translatesAutoresizingMaskIntoConstraints = false
+        poseImage.contentMode = .scaleAspectFit
+        poseImage.tintColor = .white  // For SF Symbols or template images
+
+        // Try to load your custom SVG/image from assets
+        // Replace "hands_up_pose" with your actual asset name
+        if let image = UIImage(named: "hands_up_pose") {
+            poseImage.image = image
+        } else {
+            // Fallback to SF Symbol if custom image not found
+            poseImage.image = UIImage(systemName: "figure.arms.open")
+        }
+
+        view.addSubview(poseImage)
+        NSLayoutConstraint.activate([
+            poseImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            poseImage.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 0),
+            poseImage.widthAnchor.constraint(equalToConstant: 160),
+            poseImage.heightAnchor.constraint(equalToConstant: 160)
+        ])
+
+        poseImageView = poseImage
+
+        hintContainer = container
+        hintLabel = label
+        hintProgress = progress
+        hintSecondsBadge = secBadge
+        hintStack = vstack
+    }
+
+    private func setHUDIdle() {
+        ensureHintHUD()
+        
+        // Always update the text, even if already idle
+        hintLabel?.text = "Raise your hands above your head"
+        hintProgress?.isHidden = true
+        hintProgress?.progress = 0  // Reset progress
+        hintSecondsBadge?.isHidden = true
+        hintContainer?.isHidden = false
+        hintContainer?.alpha = 1.0
+        poseImageView?.isHidden = false
+        poseImageView?.alpha = 1.0
+        
+        // Only animate if transitioning from another state
+        if hudMode != .idle {
+            hudMode = .idle
+            UIView.animate(withDuration: 0.25) {
+                self.hintContainer?.alpha = 1.0
+            }
+        } else {
+            hudMode = .idle
+        }
+    }
+
+    private func setHUDHolding(elapsed: CFTimeInterval, required: CFTimeInterval) {
+        ensureHintHUD()
+        
+        // Always update the progress and remaining time
+        let progress = Float(min(elapsed / required, 1.0))
+        let remaining = Int(ceil(max(required - elapsed, 0)))
+        
+        hintProgress?.progress = progress
+        hintSecondsBadge?.text = "\(remaining)s"
+        
+        // Only animate state change if not already in holding mode
+        if hudMode != .holding {
+            hudMode = .holding
+            UIView.animate(withDuration: 0.2) {
+                self.hintLabel?.text = "Hold steady…"
+                self.hintProgress?.isHidden = false
+                self.hintSecondsBadge?.isHidden = false
+                self.poseImageView?.alpha = 1.0
+            }
+        }
+    }
+
+    private func hideHint() {
+        guard hudMode != .hidden else { return }
+        hudMode = .hidden
+        // Hide instantly without animation to prevent delay in countdown
+        hintContainer?.alpha = 0
+        hintContainer?.isHidden = true
+        poseImageView?.alpha = 0
+        poseImageView?.isHidden = true
+    }
+
+    // MARK: - View Lifecycle
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        arView.session.delegate = self
+        arView.renderOptions.insert(.disableMotionBlur)
+
+        let config = ARBodyTrackingConfiguration()
+        arView.session.run(config)
+
+        // Initialize WordPress client with hardcoded credentials
+        self.wpClient = WordPressClient(
+            baseURL: URL(string: "https://vmelab2.lu.usi.ch/wordpress_habitusar")!,
+            username: "photo_uploader",
+            appPassword: "oBus X6rG HA8y 4DVa PhGN xCxP"
+        )
+
+        view.addSubview(captureButton)
+        captureButton.isHidden = true  // Hide the manual capture button
+        let bottomOffset: CGFloat = 32
+        NSLayoutConstraint.activate([
+            captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            captureButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -bottomOffset),
+            captureButton.widthAnchor.constraint(equalToConstant: 72),
+            captureButton.heightAnchor.constraint(equalToConstant: 72)
+        ])
+        captureButton.addTarget(self, action: #selector(manualCapture), for: .touchUpInside)
+
+        let countdownLbl = UILabel()
+        countdownLbl.translatesAutoresizingMaskIntoConstraints = false
+        countdownLbl.font = .systemFont(ofSize: 120, weight: .bold)
+        countdownLbl.textColor = .white
+        countdownLbl.textAlignment = .center
+        countdownLbl.isHidden = true
+        countdownLbl.layer.shadowColor = UIColor.black.cgColor
+        countdownLbl.layer.shadowOpacity = 0.5
+        countdownLbl.layer.shadowOffset = CGSize(width: 0, height: 2)
+        countdownLbl.layer.shadowRadius = 6
+        view.addSubview(countdownLbl)
+        NSLayoutConstraint.activate([
+            countdownLbl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            countdownLbl.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        countdownLabel = countdownLbl
+
+        ensureHintHUD()
+        setHUDIdle()
+    }
+
+    // MARK: - Capture
+    @objc private func manualCapture() {
+        stopCountdown()
+        capturePhoto()
+    }
+
+    private func capturePhoto() {
+        guard let frame = arView.session.currentFrame else { return }
+        let img = CIImage(cvPixelBuffer: frame.capturedImage)
+        let ctx = CIContext()
+        guard let cgImg = ctx.createCGImage(img, from: img.extent) else { return }
+        let uiImg = UIImage(cgImage: cgImg, scale: 1.0, orientation: .right)
+
+        showPreview(uiImg)
+    }
+
+    private func showProcessingLabel() {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        container.layer.cornerRadius = 14
+        container.clipsToBounds = true
+        container.tag = 998  // Tag for easy removal
+
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.textAlignment = .center
+        label.numberOfLines = 1
+        label.text = "Processing the image..."
+
+        container.addSubview(label)
+        view.addSubview(container)
+
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 14),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -14),
+
+            container.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            container.widthAnchor.constraint(lessThanOrEqualToConstant: 340),
+            container.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
+        ])
+    }
+
+    private func hideProcessingLabel() {
+        view.viewWithTag(998)?.removeFromSuperview()
+    }
+
+    private func showPreview(_ img: UIImage) {
+        captureButton.isHidden = true
+
+        let iv = UIImageView(image: img)
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.contentMode = .scaleAspectFit
+        iv.tag = 999
+        view.insertSubview(iv, at: 0)
+        NSLayoutConstraint.activate([
+            iv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            iv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            iv.topAnchor.constraint(equalTo: view.topAnchor),
+            iv.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        previewImageView = iv
+
+        // Show "Processing..." label
+        showProcessingLabel()
+        
+        // Automatically upload the photo
+        savePhoto()
+    }
+
+    private func showQROverlay(qrImage: UIImage, link: URL) {
+        isShowingQROverlay = true
+
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.92)
+        overlay.tag = 1000
+
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .white
+        container.layer.cornerRadius = 20
+        container.clipsToBounds = true
+
+        let qrView = UIImageView(image: qrImage)
+        qrView.translatesAutoresizingMaskIntoConstraints = false
+        qrView.contentMode = .scaleAspectFit
+
+        let lbl = UILabel()
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        lbl.text = "Scan to download your photo"
+        lbl.font = .systemFont(ofSize: 20, weight: .semibold)
+        lbl.textColor = .black
+        lbl.textAlignment = .center
+        lbl.numberOfLines = 0
+
+        // Add countdown label
+        let countdownLbl = UILabel()
+        countdownLbl.translatesAutoresizingMaskIntoConstraints = false
+        countdownLbl.text = "Auto-closing in \(countdownRemainingQR) seconds"
+        countdownLbl.font = .systemFont(ofSize: 16, weight: .regular)
+        countdownLbl.textColor = .gray
+        countdownLbl.textAlignment = .center
+        countdownLbl.numberOfLines = 1
+        countdownLbl.tag = 1001  // Tag for updating
+
+        container.addSubview(qrView)
+        container.addSubview(lbl)
+        container.addSubview(countdownLbl)
+        overlay.addSubview(container)
+        view.addSubview(overlay)
+
+        NSLayoutConstraint.activate([
+            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            container.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            container.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
+            container.widthAnchor.constraint(equalToConstant: 300),
+
+            qrView.topAnchor.constraint(equalTo: container.topAnchor, constant: 20),
+            qrView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            qrView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+            qrView.heightAnchor.constraint(equalTo: qrView.widthAnchor),
+
+            lbl.topAnchor.constraint(equalTo: qrView.bottomAnchor, constant: 16),
+            lbl.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            lbl.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+
+            countdownLbl.topAnchor.constraint(equalTo: lbl.bottomAnchor, constant: 8),
+            countdownLbl.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            countdownLbl.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+            countdownLbl.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20)
+        ])
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissQR))
+        overlay.addGestureRecognizer(tap)
+
+        // Countdown timer that updates every second
+        var remainingSeconds = countdownRemainingQR
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self, weak overlay, weak countdownLbl] timer in
+            guard let self = self, let ov = overlay, ov.superview != nil else {
+                timer.invalidate()
+                return
+            }
+            
+            remainingSeconds -= 1
+            
+            if remainingSeconds <= 0 {
+                timer.invalidate()
+                self.dismissQR()
+            } else {
+                countdownLbl?.text = "Auto-closing in \(remainingSeconds) second\(remainingSeconds == 1 ? "" : "s")"
+            }
+        }
+        
+        // Store the timer so it doesn't get deallocated
+        RunLoop.current.add(timer, forMode: .common)
+    }
+
+    @objc private func dismissQR() {
+        view.viewWithTag(1000)?.removeFromSuperview()
+        isShowingQROverlay = false
+        
+        // Reset to idle state
+        stopCountdown()
+        lastAutoCaptureTime = 0
+        poseHoldStartTime = nil
+        dismissPreview()
+        setHUDIdle()
+    }
+
+    private func presentAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    // MARK: - Networking client
     private var wpClient: WordPressClient?
     private let credsStore = KeychainCredentialsStore()
 
-    // Fine-tuning for how the body-tracked model sits on the skeleton (in meters)
-    // Positive z nudges the model slightly back toward the skeleton if it looks in front
-    // Adjust these if your asset appears offset relative to the tracked body
-    private let modelXOffset: Float = 0   // e.g. -0.02 to lower slightly
-    private let modelYOffset: Float = -0.055   // e.g. 0.04–0.10 to push back onto the body
-    private let modelZOffset: Float = 0    // e.g. slight lateral nudge if needed
-    private let modelYawDegrees: Float = 0.0 // e.g. 180 if the asset faces the wrong way
-    private let modelXScale: Float = 0.0095  // 20% narrower (0.01 * 0.8)
-    private let modelYScale: Float = 0.0095 // Slight vertical shrink
-    private let modelZScale: Float = 0.0095  // 20% narrower (0.01 * 0.8)
-
-    private var cancellables = Set<AnyCancellable>()
-    
-    // Forearm occlusion cylinders
-    private var leftForearmOccluder: ModelEntity?
-    private var rightForearmOccluder: ModelEntity?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupCaptureButton()
-
-        // Load WordPress credentials from Keychain and create client if available
-        self.wpClient = WordPressClient(baseURL: URL(string: "https://vmelab2.lu.usi.ch/wordpress_habitusar")!,username: "photo_uploader", appPassword: "oBus X6rG HA8y 4DVa PhGN xCxP")
-        
-        /*if let creds = credsStore.load() {
-            self.wpClient = WordPressClient(credentials: creds)
-        } else {
-            // Prompt once to collect and store credentials securely
-            DispatchQueue.main.async { [weak self] in
-                self?.promptForCredentials()
-            }
-        }*/
-    }
-    /// Prompts for WordPress credentials and stores them in Keychain.
     private func promptForCredentials() {
         let alert = UIAlertController(title: "Connect to WordPress",
                                       message: "Enter your site URL (including https), username, and Application Password.",
@@ -260,524 +628,30 @@ class ViewController: UIViewController, ARSessionDelegate {
 
         present(alert, animated: true)
     }
-    
-    // Recursive entity visitor
-    private func visitEntity(_ entity: Entity, _ closure: (Entity) -> Void) {
-        closure(entity)
-        for child in entity.children {
-            visitEntity(child, closure)
-        }
-    }
-    
-    private func applyOcclusionMaterial(to entity: Entity) {
-        // Replace "robot_body" with your actual mesh name
-        if let robotMesh = entity.findEntity(named: "ace_PLY") {
-            if var modelComponent = robotMesh.components[ModelComponent.self] {
-                modelComponent.materials = [OcclusionMaterial()]
-                robotMesh.components.set(modelComponent)
-                print("✅ Occlusion applied to robot mesh")
-            }
-        } else {
-            print("❌ Robot mesh not found - check entity names")
-        }
-    }
-    
-    private func printEntityTree(_ entity: Entity, level: Int) {
-        let indent = String(repeating: "  ", count: level)
-        let hasModel = entity.components[ModelComponent.self] != nil
-        print("\(indent)- '\(entity.name)' [Model: \(hasModel)] Children: \(entity.children.count)")
-        
-        for child in entity.children {
-            printEntityTree(child, level: level + 1)
-        }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-
-        // We'll configure the AR session ourselves
-        arView.automaticallyConfigureSession = false
-
-        // (Occlusion toggles removed per request)
-
-        guard ARBodyTrackingConfiguration.isSupported else {
-            fatalError("Body tracking requires an A12+ device with a rear camera.")
-        }
-
-        let config = ARBodyTrackingConfiguration()
-        config.isAutoFocusEnabled = true
-
-        // ---- Depth-based occlusion (LiDAR) ----
-        // People Segmentation occlusion isn't available on ARBodyTrackingConfiguration,
-        // so we use sceneDepth (and the smoothed variant) for occlusion instead.
-        if ARBodyTrackingConfiguration.supportsFrameSemantics(.sceneDepth) {
-            config.frameSemantics.insert(.sceneDepth)
-            print("Depth occlusion: sceneDepth enabled")
-        }
-        if ARBodyTrackingConfiguration.supportsFrameSemantics(.smoothedSceneDepth) {
-            config.frameSemantics.insert(.smoothedSceneDepth)
-            print("Depth occlusion: smoothedSceneDepth enabled")
-        }
-
-        // Start/Reset the session to apply semantics
-        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
-        arView.environment.sceneUnderstanding.options.insert(.occlusion)
-        
-        arView.session.delegate = self
-        
-        // Add our body anchor
-        arView.scene.addAnchor(bodyAnchor)
-
-        // Load the skinned, body-tracked dress
-        // Try loading as a regular Entity first
-        loadCancellable = Entity.loadBodyTrackedAsync(named: "asrl-hollow-thinner").sink(
-            receiveCompletion: { completion in
-                if case let .failure(error) = completion {
-                    print("Error loading model: \(error)")
-                }
-                self.loadCancellable?.cancel()
-            },
-            receiveValue: { [weak self] entity in
-                guard let self = self,
-                      let bodyEntity = entity as? BodyTrackedEntity else {
-                    print("Not a BodyTrackedEntity")
-                    return
-                }
-                
-                print("IT WORKED");
-                
-                /*
-                // Apply occlusion using material slots
-                if var modelComp = bodyEntity.components[ModelComponent.self] {
-                    print("BodyTrackedEntity has \(modelComp.materials.count) materials")
-                    
-                    // Apply occlusion to robot materials (slots 0, 1, 2)
-                    // Slot 3 is the dress, keep it visible
-                    if modelComp.materials.count >= 4 {
-                        modelComp.materials[1] = OcclusionMaterial()
-                        modelComp.materials[2] = OcclusionMaterial()
-                        modelComp.materials[3] = OcclusionMaterial()
-                        bodyEntity.components.set(modelComp)
-                        print("✅ Applied OcclusionMaterial to slots 0-2 (robot)")
-                    } else {
-                        print("⚠️ Expected 4 materials, found \(modelComp.materials.count)")
-                    }
-                } else {
-                    print("❌ No ModelComponent on BodyTrackedEntity")
-                }
-                */
-                
-                // Apply transforms
-                var t = bodyEntity.transform
-                t.scale = SIMD3<Float>(modelXScale, modelYScale, modelZScale)
-                t.translation.x += self.modelXOffset
-                t.translation.y += self.modelYOffset
-                t.translation.z += self.modelZOffset
-                if self.modelYawDegrees != 0.0 {
-                    let radians = self.modelYawDegrees * .pi / 180.0
-                    let yaw = simd_quatf(angle: radians, axis: SIMD3<Float>(0, 1, 0))
-                    t.rotation = simd_mul(yaw, t.rotation)
-                }
-                bodyEntity.transform = t
-
-                // Load occlusion mesh
-                // self.loadOcclusionMesh(for: bodyEntity)
-
-                self.bodyAnchor.addChild(bodyEntity)
-                self.setupForearmOccluders(bodyEntity: bodyEntity)
-                
-                print("📋 Available joint names:", bodyEntity.jointNames)
-                self.printAllJointNames(in: bodyEntity)
-                
-                self.loadCancellable?.cancel()
-            }
-        )
-    }
-
-
-private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
-        guard let leftOccluder = leftForearmOccluder,
-              let rightOccluder = rightForearmOccluder else { return }
-
-        // Get indices of forearm joints
-        guard let leftForearmIndex = bodyAnchor.skeleton.definition.jointNames.firstIndex(of: "left_forearm_joint"),
-              let rightForearmIndex = bodyAnchor.skeleton.definition.jointNames.firstIndex(of: "right_forearm_joint") else {
-            return
-        }
-
-        // Get joint model transforms
-        let leftJointTransform = bodyAnchor.skeleton.jointModelTransforms[leftForearmIndex]
-        let rightJointTransform = bodyAnchor.skeleton.jointModelTransforms[rightForearmIndex]
-
-        // Convert to world transform
-        let leftWorldTransform = simd_mul(bodyAnchor.transform, leftJointTransform)
-        let rightWorldTransform = simd_mul(bodyAnchor.transform, rightJointTransform)
-
-        // Update position and orientation of occluders
-        leftOccluder.position = SIMD3<Float>(leftWorldTransform.columns.3.x,
-                                             leftWorldTransform.columns.3.y,
-                                             leftWorldTransform.columns.3.z)
-        leftOccluder.orientation = simd_quatf(leftWorldTransform)
-
-        rightOccluder.position = SIMD3<Float>(rightWorldTransform.columns.3.x,
-                                              rightWorldTransform.columns.3.y,
-                                              rightWorldTransform.columns.3.z)
-        rightOccluder.orientation = simd_quatf(rightWorldTransform)
-
-        // Adjust cylinder height orientation so it matches forearm axis roughly
-        // Here a simple approach: rotate cylinder by -90 deg around X to align vertical axis to forearm axis
-        // Adjust if needed for your model precision
-
-        let rotationAdjustment = simd_quatf(angle: -.pi/2, axis: SIMD3<Float>(1, 0, 0))
-        leftOccluder.orientation = simd_mul(leftOccluder.orientation, rotationAdjustment)
-        rightOccluder.orientation = simd_mul(rightOccluder.orientation, rotationAdjustment)
-    }
-
-     private func setupForearmOccluders(bodyEntity: BodyTrackedEntity) {
-        // Remove old occluders if any
-        leftForearmOccluder?.removeFromParent()
-        rightForearmOccluder?.removeFromParent()
-
-        // Create cylinders for left and right forearms
-        let radius: Float = 0.035
-        let height: Float = 0.20
-
-        let leftCylinder = ModelEntity(mesh: .generateCylinder(height: height, radius: radius))
-        leftCylinder.name = "leftForearmOccluder"
-        leftCylinder.model?.materials = [OcclusionMaterial()]
-
-        let rightCylinder = ModelEntity(mesh: .generateCylinder(height: height, radius: radius))
-        rightCylinder.name = "rightForearmOccluder"
-        rightCylinder.model?.materials = [OcclusionMaterial()]
-
-        // Add to the body anchor for now; positions will be updated on each frame
-        bodyAnchor.addChild(leftCylinder)
-        bodyAnchor.addChild(rightCylinder)
-
-        self.leftForearmOccluder = leftCylinder
-        self.rightForearmOccluder = rightCylinder
-    }
-
-    private func loadOcclusionMesh(for parentEntity: Entity) {
-        Entity.loadAsync(named: "asrl-hollow-thinner").sink { completion in
-            if case let .failure(error) = completion {
-                print("Error loading occlusion model: \(error)")
-            }
-        } receiveValue: { [weak self] occlusionEntity in
-            guard let self = self else { return }
-            
-            // Apply OcclusionMaterial to all mesh parts
-            self.visitEntity(occlusionEntity) { entity in
-                if var modelComponent = entity.components[ModelComponent.self] {
-                    modelComponent.materials = [OcclusionMaterial()]
-                    entity.components.set(modelComponent)
-                }
-            }
-
-            // Scale the occlusion mesh (slightly smaller to avoid over-occlusion)
-            var t = occlusionEntity.transform
-            t.scale = SIMD3<Float>(0.95, 0.95, 0.95)
-            occlusionEntity.transform = t
-
-            // Add occlusion mesh as child to the parent entity
-            parentEntity.addChild(occlusionEntity)
-        }
-        .store(in: &cancellables) // Make sure you have a Set<AnyCancellable> property in your class
-    }
-
-
-    
-    private func printAllJointNames(in entity: Entity, level: Int = 0) {
-        let indent = String(repeating: "  ", count: level)
-        print("\(indent)- \(entity.name)")
-        
-        for child in entity.children {
-            printAllJointNames(in: child, level: level + 1)
-        }
-    }
-    
-    private func applySpineOffset(to bodyEntity: BodyTrackedEntity) {
-        guard let spineIndex = bodyEntity.jointNames.firstIndex(of: "spine_7_joint") else {
-            print("NO ENTITY")
-            return }
-        
-        var jointTransforms = bodyEntity.jointTransforms
-        var spineTransform = jointTransforms[spineIndex]
-        
-        let pitchDegrees: Float = -8.0
-        let pitchRadians = pitchDegrees * .pi / 180.0
-        let pitchRotation = simd_quatf(angle: pitchRadians, axis: SIMD3<Float>(1, 0, 0))
-        
-        spineTransform.rotation = simd_mul(pitchRotation, spineTransform.rotation)
-        jointTransforms[spineIndex] = spineTransform
-        bodyEntity.jointTransforms = jointTransforms
-    }
-
-    private func presentAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
-
-    /// Shows a full-screen overlay with the QR image and a Close button.
-    private func showQROverlay(qrImage: UIImage, link: URL) {
-        // Full-screen dimmed overlay
-        let overlay = UIView(frame: view.bounds)
-        overlay.backgroundColor = .black.withAlphaComponent(0.7)
-        overlay.tag = 1001
-        overlay.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(overlay)
-
-        // Constrain overlay to fill the view
-        NSLayoutConstraint.activate([
-            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            overlay.topAnchor.constraint(equalTo: view.topAnchor),
-            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
-        // QR image
-        let imgView = UIImageView(image: qrImage)
-        imgView.tag = 1002
-        imgView.translatesAutoresizingMaskIntoConstraints = false
-        imgView.contentMode = .scaleAspectFit
-        imgView.backgroundColor = .white
-        imgView.layer.cornerRadius = 8
-        imgView.clipsToBounds = true
-        overlay.addSubview(imgView)
-
-        // Link label
-        let label = UILabel()
-        label.tag = 1003
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = link.absoluteString
-        label.textColor = .white
-        label.font = .systemFont(ofSize: 12)
-        label.numberOfLines = 2
-        label.textAlignment = .center
-        overlay.addSubview(label)
-
-        // Close button (style like Retake button)
-        let close = UIButton(type: .system)
-        close.tag = 1004
-        close.translatesAutoresizingMaskIntoConstraints = false
-        close.setTitle("Retake", for: .normal)
-        close.setTitleColor(.black, for: .normal)
-        close.backgroundColor = .white
-        close.layer.cornerRadius = 8
-        close.addTarget(self, action: #selector(dismissQROverlay), for: .touchUpInside)
-        overlay.addSubview(close)
-
-        // Layout inside overlay
-        NSLayoutConstraint.activate([
-            imgView.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
-            imgView.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
-            imgView.widthAnchor.constraint(equalToConstant: 240),
-            imgView.heightAnchor.constraint(equalTo: imgView.widthAnchor),
-
-            label.topAnchor.constraint(equalTo: imgView.bottomAnchor, constant: 12),
-            label.leadingAnchor.constraint(equalTo: overlay.leadingAnchor, constant: 20),
-            label.trailingAnchor.constraint(equalTo: overlay.trailingAnchor, constant: -20),
-
-            close.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 16),
-            close.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
-            close.widthAnchor.constraint(equalToConstant: 100),
-            close.heightAnchor.constraint(equalToConstant: 44)
-        ])
-    }
-
-    @objc private func dismissQROverlay() {
-        // Remove overlay (and everything inside it)
-        view.viewWithTag(1001)?.removeFromSuperview()
-
-        // Safety: in case older overlays added subviews directly to the view
-        view.viewWithTag(1002)?.removeFromSuperview() // QR image
-        view.viewWithTag(1003)?.removeFromSuperview() // label
-        view.viewWithTag(1004)?.removeFromSuperview() // close button
-    }
-
-    // MARK: - Capture UI
-
-    private func setupCaptureButton() {
-        view.addSubview(captureButton)
-        NSLayoutConstraint.activate([
-            captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            captureButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            captureButton.widthAnchor.constraint(equalToConstant: 72),
-            captureButton.heightAnchor.constraint(equalToConstant: 72)
-        ])
-        captureButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
-        captureButton.addTarget(self, action: #selector(shutterDown), for: .touchDown)
-        captureButton.addTarget(self, action: #selector(shutterUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-    }
-
-    @objc private func shutterDown() {
-        UIView.animate(withDuration: 0.08) {
-            self.captureButton.transform = CGAffineTransform(scaleX: 0.92, y: 0.92)
-        }
-    }
-
-    @objc private func shutterUp() {
-        UIView.animate(withDuration: 0.12, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.8, options: [.allowUserInteraction], animations: {
-            self.captureButton.transform = .identity
-        }, completion: nil)
-    }
-
-    // White flash effect (like Camera.app)
-    private func shutterFlash() {
-        // Remove any previous flash (safety)
-        view.viewWithTag(2001)?.removeFromSuperview()
-
-        let flash = UIView()
-        flash.tag = 2001
-        flash.backgroundColor = .white
-        flash.alpha = 0.0
-        flash.isUserInteractionEnabled = false
-        flash.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(flash)
-
-        // Pin to full screen
-        NSLayoutConstraint.activate([
-            flash.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            flash.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            flash.topAnchor.constraint(equalTo: view.topAnchor),
-            flash.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
-        // Quick fade in, then fade out and remove
-        UIView.animate(withDuration: 0.06, animations: {
-            flash.alpha = 1.0
-        }) { _ in
-            UIView.animate(withDuration: 0.25, animations: {
-                flash.alpha = 0.0
-            }) { _ in
-                flash.removeFromSuperview()
-            }
-        }
-    }
-
-    @objc private func capturePhoto() {
-        // Haptic feedback on capture
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.prepare()
-        generator.impactOccurred()
-
-        // White flash visual
-        shutterFlash()
-
-        // Hide UI
-        captureButton.isHidden = true
-
-        // Take snapshot including AR content (with occlusion applied)
-        arView.snapshot(saveToHDR: false) { [weak self] image in
-            guard let self = self, let image = image else { return }
-            self.showPreview(for: image)
-        }
-    }
-
-    private func showPreview(for image: UIImage) {
-        // Dim background
-        let overlay = UIView(frame: view.bounds)
-        overlay.backgroundColor = .black.withAlphaComponent(0.6)
-        overlay.tag = 999
-        view.addSubview(overlay)
-
-        // Image view
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFit
-        imageView.frame = CGRect(x: 20,
-                                 y: 100,
-                                 width: view.bounds.width - 40,
-                                 height: view.bounds.height - 200)
-        imageView.layer.borderColor = UIColor.white.cgColor
-        imageView.layer.borderWidth = 2
-        view.addSubview(imageView)
-        previewImageView = imageView
-
-        // Save button
-        let saveBtn = UIButton(type: .system)
-        saveBtn.setTitle("Save", for: .normal)
-        saveBtn.setTitleColor(.white, for: .normal)
-        saveBtn.backgroundColor = .green
-        saveBtn.layer.cornerRadius = 8
-        saveBtn.translatesAutoresizingMaskIntoConstraints = false
-        saveBtn.addTarget(self, action: #selector(savePhoto), for: .touchUpInside)
-        view.addSubview(saveBtn)
-        saveButton = saveBtn
-
-        // Retake button
-        let retakeBtn = UIButton(type: .system)
-        retakeBtn.setTitle("Retake", for: .normal)
-        retakeBtn.setTitleColor(.white, for: .normal)
-        retakeBtn.backgroundColor = .red
-        retakeBtn.layer.cornerRadius = 8
-        retakeBtn.translatesAutoresizingMaskIntoConstraints = false
-        retakeBtn.addTarget(self, action: #selector(retakePhoto), for: .touchUpInside)
-        view.addSubview(retakeBtn)
-        retakeButton = retakeBtn
-
-        // Layout buttons
-        NSLayoutConstraint.activate([
-            saveBtn.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            saveBtn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            saveBtn.widthAnchor.constraint(equalToConstant: 100),
-            saveBtn.heightAnchor.constraint(equalToConstant: 44),
-
-            retakeBtn.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            retakeBtn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            retakeBtn.widthAnchor.constraint(equalToConstant: 100),
-            retakeBtn.heightAnchor.constraint(equalToConstant: 44)
-        ])
-    }
 
     @objc private func savePhoto() {
-        // Prevent double-taps
         if isUploading { return }
         isUploading = true
 
-        // Ensure we have a configured client
         guard let client = wpClient else {
             isUploading = false
-            presentAlert(title: "Not configured", message: "Set your WordPress credentials to upload.")
+            hideProcessingLabel()
+            presentAlert(title: "Not configured", message: "Set WordPress credentials to upload.")
             promptForCredentials()
             return
         }
 
         guard let image = previewImageView?.image else {
             isUploading = false
+            hideProcessingLabel()
             return
         }
 
-        // Optional: also save locally
         let saveLocally = false
         if saveLocally {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
         }
 
-        // Disable Save and Retake buttons, show uploading state
-        saveButton?.isEnabled = false
-        saveButton?.alpha = 0.6
-        saveButton?.setTitle("Uploading…", for: .normal)
-        retakeButton?.isEnabled = false
-        retakeButton?.alpha = 0.6
-
-        // Show spinner in the Save button
-        if saveSpinner == nil {
-            let spinner = UIActivityIndicatorView(style: .medium)
-            spinner.translatesAutoresizingMaskIntoConstraints = false
-            if let saveBtn = self.saveButton {
-                saveBtn.setTitle("", for: .normal) // hide text while spinning
-                saveBtn.addSubview(spinner)
-                NSLayoutConstraint.activate([
-                    spinner.centerXAnchor.constraint(equalTo: saveBtn.centerXAnchor),
-                    spinner.centerYAnchor.constraint(equalTo: saveBtn.centerYAnchor)
-                ])
-                spinner.startAnimating()
-                self.saveSpinner = spinner
-            }
-        }
-
-        // Async upload + fetch QR using WordPressClient
         Task { @MainActor in
             do {
                 let res = try await client.upload(image: image, title: "AR snapshot")
@@ -788,60 +662,39 @@ private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
                 }
 
                 let qrImage = try await client.fetchImage(at: qrURL)
+                
+                // Hide processing label before showing QR
+                self.hideProcessingLabel()
                 self.showQROverlay(qrImage: qrImage, link: mediaURL)
             } catch {
+                self.hideProcessingLabel()
                 self.presentAlert(title: "Upload failed", message: error.localizedDescription)
+                // After showing error, go back to idle
+                self.dismissPreview()
             }
 
-            // Teardown spinner & restore UI
-            self.saveSpinner?.stopAnimating()
-            self.saveSpinner?.removeFromSuperview()
-            self.saveSpinner = nil
-            self.saveButton?.setTitle("Save", for: .normal)
-            self.saveButton?.isEnabled = true
-            self.saveButton?.alpha = 1.0
-            self.retakeButton?.isEnabled = true
-            self.retakeButton?.alpha = 1.0
             self.isUploading = false
-
-            // Dismiss the preview overlay (returns to AR view; QR overlay stays visible if shown)
-            self.dismissPreview()
         }
     }
 
     @objc private func retakePhoto() {
-       // Stop any pending countdown and reset state so detection can re-arm immediately
         stopCountdown()
         lastAutoCaptureTime = 0
-        poseHoldFrames = 0
+        poseHoldStartTime = nil
         dismissPreview()
+        setHUDIdle()
     }
 
     private func dismissPreview() {
-        // Remove overlay
         view.viewWithTag(999)?.removeFromSuperview()
+        view.viewWithTag(998)?.removeFromSuperview()  // Remove processing label if still there
 
-        // Remove and nil out preview UI so pose detection can re-arm
         if let iv = previewImageView {
             iv.removeFromSuperview()
             previewImageView = nil
         }
-        if let btn = saveButton {
-            btn.removeFromSuperview()
-            saveButton = nil
-        }
-        if let btn = retakeButton {
-            btn.removeFromSuperview()
-            retakeButton = nil
-        }
-        if let spinner = saveSpinner {
-            spinner.stopAnimating()
-            spinner.removeFromSuperview()
-            saveSpinner = nil
-        }
 
-        // Show UI again
-        captureButton.isHidden = false
+        captureButton.isHidden = true  // Keep it hidden since we don't use manual capture
     }
 
     // Lock orientation to portrait only
@@ -855,109 +708,126 @@ private func updateForearmOccluderPositions(for bodyAnchor: ARBodyAnchor) {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Keep the button perfectly circular if constraints change
         captureButton.layer.cornerRadius = captureButton.bounds.height / 2
     }
-    
+
     // MARK: - Countdown helpers
     private func startCountdown(seconds: Int = 5) {
-        // Avoid double countdowns
         guard countdownTimer == nil else { return }
-
         countdownRemaining = seconds
 
-        // Big center label
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.textAlignment = .center
-        label.font = .systemFont(ofSize: 72, weight: .bold)
-        label.textColor = .white
-        label.backgroundColor = UIColor.black.withAlphaComponent(0.35)
-        label.layer.cornerRadius = 16
-        label.clipsToBounds = true
-        label.text = "\(countdownRemaining)"
-        view.addSubview(label)
-        countdownLabel = label
+        print("🔔 Countdown started with \(seconds) seconds")
+        
+        // Show initial countdown number
+        countdownLabel?.text = "\(countdownRemaining)"
+        countdownLabel?.isHidden = false
+        
+        // Prepare and trigger initial haptic
+        // countdownHaptic.prepare()
+        // countdownHaptic.impactOccurred()
 
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            label.widthAnchor.constraint(greaterThanOrEqualToConstant: 120),
-            label.heightAnchor.constraint(greaterThanOrEqualToConstant: 120)
-        ])
-
-        // Haptic on start
-        let startHaptic = UIImpactFeedbackGenerator(style: .light)
-        startHaptic.impactOccurred()
-
-        // Timer: tick every second
+        // Create timer that fires after 1 second, then repeats
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now() + 1.0, repeating: 1.0)
         timer.setEventHandler { [weak self] in
             guard let self = self else { return }
             self.countdownRemaining -= 1
+            print("⏱️ Countdown tick: \(self.countdownRemaining)")
             if self.countdownRemaining <= 0 {
+                print("📸 Countdown complete, capturing photo")
                 self.stopCountdown()
                 self.capturePhoto()
                 return
             }
             self.countdownLabel?.text = "\(self.countdownRemaining)"
-            let tick = UIImpactFeedbackGenerator(style: .light)
-            tick.impactOccurred()
+            
+            // Prepare haptic ahead of time for smooth feedback
+            // self.countdownHaptic.prepare()
+            // self.countdownHaptic.impactOccurred()
         }
         countdownTimer = timer
         timer.resume()
+        print("✅ Timer resumed")
     }
 
     private func stopCountdown() {
         countdownTimer?.cancel()
         countdownTimer = nil
-        countdownLabel?.removeFromSuperview()
-        countdownLabel = nil
+        countdownLabel?.isHidden = true
     }
-    
+
     // MARK: - ARSessionDelegate (auto-capture on pose)
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         guard autoCaptureEnabled else { return }
-        // Don't auto-shoot while a preview is visible or during upload
         guard previewImageView == nil, !isUploading else { return }
-        guard !countdownActive else { return }
-        
-        // if let bodyEntity = bodyAnchor.children.first as? BodyTrackedEntity {
-        //         applySpineOffset(to: bodyEntity)
-        // }
+        guard !countdownActive else { return }  // Don't check poses during photo countdown
+        guard !isShowingQROverlay else { return }
 
         let now = CACurrentMediaTime()
         guard now - lastAutoCaptureTime > autoCaptureCooldown else { return }
 
+        // Detect "hands up" (if no ARBodyAnchor at all, this stays false)
+        var handsUpDetected = false
         for anchor in anchors {
             guard let body = anchor as? ARBodyAnchor else { continue }
-            guard let arBodyAnchor = anchor as? ARBodyAnchor else { continue }
+            if poseDetector.isHandsUp(body) {
+                handsUpDetected = true
+                break
+            }
+        }
 
-            // (Custom geometry occluders removed per request)
-            updateForearmOccluderPositions(for: arBodyAnchor)
-            
-            // Choose which pose to use:
-            let poseDetected = poseDetector.isTPose(body) // or: poseDetector.isTPose(body)
+        if handsUpDetected {
+            // User has hands up
+            if poseHoldStartTime == nil {
+                // Start the 3-second timer
+                poseHoldStartTime = now
+                uiEpoch += 1
+                print("✋ Started 3-second hold timer")
+            }
 
-            if poseDetected {
-                poseHoldFrames += 1
-                if poseHoldFrames == 1 || poseHoldFrames % 5 == 0 {
-                    print("Pose progressing… frames=\(poseHoldFrames)")
-                }
-                if poseHoldFrames >= requiredHoldFrames {
-                    poseHoldFrames = 0
+            if let start = poseHoldStartTime {
+                let elapsed = now - start
+                if elapsed >= requiredHoldDuration {
+                    // 3 seconds completed! Start the photo countdown
+                    print("✅ 3 seconds complete! Starting photo countdown")
+                    poseHoldStartTime = nil
                     lastAutoCaptureTime = now
-                    DispatchQueue.main.async { [weak self] in
-                        // self?.capturePhoto()
-                        self?.startCountdown(seconds: 5)
+                    uiEpoch += 1
+                    let epoch = uiEpoch
+                    DispatchQueue.main.async { [weak self, epoch] in
+                        guard let self = self, epoch == self.uiEpoch else { return }
+                        self.hideHint()
+                        self.startCountdown(seconds: 5)
+                    }
+                } else {
+                    // Still holding, update UI with progress
+                    let epoch = uiEpoch
+                    DispatchQueue.main.async { [weak self, epoch] in
+                        guard let self = self, epoch == self.uiEpoch else { return }
+                        self.setHUDHolding(elapsed: elapsed, required: self.requiredHoldDuration)
                     }
                 }
-            } else {
-                if poseHoldFrames != 0 { print("Pose RESET at \(poseHoldFrames) frames") }
-                poseHoldFrames = 0
+            }
+        } else {
+            // Hands are NOT up
+            // Reset the timer if it was running
+            if poseHoldStartTime != nil {
+                print("❌ Hands lowered! Resetting 3-second timer")
+                poseHoldStartTime = nil
+                uiEpoch += 1
+                let epoch = uiEpoch
+                DispatchQueue.main.async { [weak self, epoch] in
+                    guard let self = self, epoch == self.uiEpoch else { return }
+                    self.setHUDIdle()
+                }
+            } else if hudMode != .idle {
+                // Ensure HUD is in idle state
+                let epoch = uiEpoch
+                DispatchQueue.main.async { [weak self, epoch] in
+                    guard let self = self, epoch == self.uiEpoch else { return }
+                    self.setHUDIdle()
+                }
             }
         }
     }
 }
-
