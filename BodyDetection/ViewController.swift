@@ -3,6 +3,7 @@ import RealityKit
 import ARKit
 import Combine // (Remove if unused elsewhere)
 import Photos
+import Lottie
 
 /// Detects simple poses from an ARBodyAnchor.
 final class PoseDetector {
@@ -37,7 +38,7 @@ final class PoseDetector {
 
     /// True if both wrists are above the head by a small margin.
     func isHandsUp(_ anchor: ARBodyAnchor) -> Bool {
-        dumpJointNamesOnce()
+        // dumpJointNamesOnce()
         guard
             let li = index(named: "left_hand_joint")  ?? findIndex(containing: "left_hand"),
             let ri = index(named: "right_hand_joint") ?? findIndex(containing: "right_hand"),
@@ -144,6 +145,7 @@ class ViewController: UIViewController, ARSessionDelegate {
     private var previewImageView: UIImageView?
     private var isUploading = false
     private var isShowingQROverlay = false
+    private var saveLocally = false;
 
     // HUD hint while detecting pose
     private var hintContainer: UIView?
@@ -168,6 +170,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     private let autoCaptureCooldown: Double = 4.0
     private var autoCaptureEnabled = true
     private var poseImageView: UIImageView?
+    private var poseAnimationView: LottieAnimationView?
+    private var holdAnimationView: LottieAnimationView?
     
     // UI epoch + explicit HUD state
     private var uiEpoch: Int = 0
@@ -260,7 +264,6 @@ class ViewController: UIViewController, ARSessionDelegate {
         poseImage.tintColor = .white  // For SF Symbols or template images
 
         // Try to load your custom SVG/image from assets
-        // Replace "hands_up_pose" with your actual asset name
         if let image = UIImage(named: "hands_up_pose") {
             poseImage.image = image
         } else {
@@ -277,6 +280,48 @@ class ViewController: UIViewController, ARSessionDelegate {
         ])
 
         poseImageView = poseImage
+        
+        poseImageView = poseImage
+
+        // Add Lottie animation layer on top of the image
+        let poseAnimation = LottieAnimationView(name: "scroll")
+        poseAnimation.translatesAutoresizingMaskIntoConstraints = false
+        poseAnimation.contentMode = .scaleAspectFit
+        poseAnimation.loopMode = .loop
+        poseAnimation.animationSpeed = 1.0
+        poseAnimation.backgroundBehavior = .pauseAndRestore
+        poseAnimation.transform = CGAffineTransform(rotationAngle: .pi)
+
+        view.addSubview(poseAnimation)
+        NSLayoutConstraint.activate([
+            poseAnimation.centerXAnchor.constraint(equalTo: poseImage.centerXAnchor, constant: 1),
+            poseAnimation.centerYAnchor.constraint(equalTo: poseImage.centerYAnchor, constant: -50),
+            poseAnimation.widthAnchor.constraint(equalToConstant: 50),
+            poseAnimation.heightAnchor.constraint(equalToConstant: 50)
+        ])
+
+        poseAnimation.play()
+        poseAnimationView = poseAnimation
+        
+        // Add hold steady animation (hidden by default)
+        let holdAnimation = LottieAnimationView(name: "hold")
+        holdAnimation.translatesAutoresizingMaskIntoConstraints = false
+        holdAnimation.contentMode = .scaleAspectFit
+        holdAnimation.loopMode = .loop
+        holdAnimation.animationSpeed = 1.0
+        holdAnimation.backgroundBehavior = .pauseAndRestore
+        holdAnimation.isHidden = true  // Start hidden
+        holdAnimation.alpha = 0
+
+        view.addSubview(holdAnimation)
+        NSLayoutConstraint.activate([
+            holdAnimation.centerXAnchor.constraint(equalTo: poseImage.centerXAnchor, constant: 1),
+            holdAnimation.centerYAnchor.constraint(equalTo: poseImage.centerYAnchor, constant: -50),
+            holdAnimation.widthAnchor.constraint(equalToConstant: 50),
+            holdAnimation.heightAnchor.constraint(equalToConstant: 50)
+        ])
+
+        holdAnimationView = holdAnimation
 
         hintContainer = container
         hintLabel = label
@@ -297,6 +342,12 @@ class ViewController: UIViewController, ARSessionDelegate {
         hintContainer?.alpha = 1.0
         poseImageView?.isHidden = false
         poseImageView?.alpha = 1.0
+        poseAnimationView?.isHidden = false
+        poseAnimationView?.alpha = 1.0
+        poseAnimationView?.play()
+        holdAnimationView?.pause()
+        holdAnimationView?.isHidden = true
+        holdAnimationView?.alpha = 0
         
         // Only animate if transitioning from another state
         if hudMode != .idle {
@@ -326,7 +377,19 @@ class ViewController: UIViewController, ARSessionDelegate {
                 self.hintLabel?.text = "Hold steady…"
                 self.hintProgress?.isHidden = false
                 self.hintSecondsBadge?.isHidden = false
+                
+                // Keep background image visible
                 self.poseImageView?.alpha = 1.0
+                
+                // Hide pose animation
+                self.poseAnimationView?.alpha = 0
+                self.poseAnimationView?.isHidden = true
+                self.poseAnimationView?.pause()
+                
+                // Show hold animation
+                self.holdAnimationView?.isHidden = false
+                self.holdAnimationView?.alpha = 1.0
+                self.holdAnimationView?.play()
             }
         }
     }
@@ -339,6 +402,12 @@ class ViewController: UIViewController, ARSessionDelegate {
         hintContainer?.isHidden = true
         poseImageView?.alpha = 0
         poseImageView?.isHidden = true
+        poseAnimationView?.alpha = 0
+        poseAnimationView?.isHidden = true
+        poseAnimationView?.pause()
+        holdAnimationView?.alpha = 0
+        holdAnimationView?.isHidden = true
+        holdAnimationView?.pause()
     }
 
     // MARK: - View Lifecycle
@@ -397,14 +466,52 @@ class ViewController: UIViewController, ARSessionDelegate {
         capturePhoto()
     }
 
+    private func addWatermark(to image: UIImage, text: String = "Habitus Fidei © 2025") -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+        
+        let watermarkedImage = renderer.image { context in
+            // Draw the original image
+            image.draw(at: .zero)
+            
+            // Configure watermark text
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.boldSystemFont(ofSize: 50),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.6),
+                .strokeColor: UIColor.black.withAlphaComponent(0.3),
+                .strokeWidth: -2
+            ]
+            
+            let attributedText = NSAttributedString(string: text, attributes: attributes)
+            let textSize = attributedText.size()
+            
+            // Position watermark in bottom-right corner with padding
+            let padding: CGFloat = 20
+            let textRect = CGRect(
+                x: image.size.width - textSize.width - padding,
+                y: image.size.height - textSize.height - padding,
+                width: textSize.width,
+                height: textSize.height
+            )
+            
+            attributedText.draw(in: textRect)
+        }
+        
+        return watermarkedImage
+    }
+    
     private func capturePhoto() {
         guard let frame = arView.session.currentFrame else { return }
         let img = CIImage(cvPixelBuffer: frame.capturedImage)
         let ctx = CIContext()
         guard let cgImg = ctx.createCGImage(img, from: img.extent) else { return }
-        let uiImg = UIImage(cgImage: cgImg, scale: 1.0, orientation: .right)
-
-        showPreview(uiImg)
+        let originalImg = UIImage(cgImage: cgImg, scale: 1.0, orientation: .right)
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let timestamp = dateFormatter.string(from: Date())
+        let watermarkedImg = addWatermark(to: originalImg, text: "Habitus Fidei - \(timestamp)")
+        
+        showPreview(watermarkedImg)
     }
 
     private func showProcessingLabel() {
@@ -647,7 +754,6 @@ class ViewController: UIViewController, ARSessionDelegate {
             return
         }
 
-        let saveLocally = false
         if saveLocally {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
         }
