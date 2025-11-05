@@ -336,7 +336,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         ensureHintHUD()
         
         // Always update the text, even if already idle
-        hintLabel?.text = "🇮🇹: Alza le mani sopra la testa\n🇬🇧: Hands above your head"
+        hintLabel?.text = "🇮🇹 Alza le mani sopra la testa\n🇬🇧 Hands above your head"
         hintLabel?.textAlignment = .left
         hintLabel?.numberOfLines = 0
         hintLabel?.textColor = .white
@@ -379,7 +379,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         if hudMode != .holding {
             hudMode = .holding
             UIView.animate(withDuration: 0.2) {
-                self.hintLabel?.text = "🇮🇹: Mantieni la posizione\n🇬🇧: Hold steady"
+                self.hintLabel?.text = "🇮🇹 Mantieni la posizione\n🇬🇧 Hold steady"
                 self.hintLabel?.textColor = .white
                 self.hintLabel?.textAlignment = .left
                 self.hintProgress?.isHidden = false
@@ -572,7 +572,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         label.font = .systemFont(ofSize: 18, weight: .semibold)
         label.textAlignment = .left
         label.numberOfLines = 2
-        label.text = "🇮🇹: Attendi\n🇬🇧: Wait"
+        label.text = "🇮🇹 Per favore attendi...\n🇬🇧 Please wait..."
 
         container.addSubview(label)
         view.addSubview(container)
@@ -637,7 +637,7 @@ class ViewController: UIViewController, ARSessionDelegate {
 
         let lbl = UILabel()
         lbl.translatesAutoresizingMaskIntoConstraints = false
-        lbl.text = "🇮🇹: Scarica la tua foto\n🇬🇧: Download your photo"
+        lbl.text = "🇮🇹 Scarica la tua foto\n🇬🇧 Download your photo"
         lbl.font = .systemFont(ofSize: 20, weight: .semibold)
         lbl.textColor = .black
         lbl.textAlignment = .left
@@ -872,7 +872,8 @@ class ViewController: UIViewController, ARSessionDelegate {
         countdownLabel?.text = "\(countdownRemaining)"
         countdownLabel?.isHidden = false
         
-        poseInstructionLabel?.text = "🇮🇹: Mettiti in posa! 💃🏻\n🇬🇧: Strike a pose! 💃🏻"
+        poseInstructionLabel?.text = "🇮🇹 Mettiti in posa! \n🇬🇧 Strike a pose! \n💃🏻"
+        poseInstructionLabel?.numberOfLines = 0
         poseInstructionContainer?.isHidden = false
         
         // Prepare and trigger initial haptic
