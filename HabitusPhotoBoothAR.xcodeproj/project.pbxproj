@@ -17,24 +17,6 @@
 		2F60E1E422631E0F00357E98 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F60E1E322631E0F00357E98 /* Assets.xcassets */; };
 		2F60E1E722631E0F00357E98 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2F60E1E522631E0F00357E98 /* LaunchScreen.storyboard */; };
 		718E55BC2289F8FF00A9B13B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 718E55BB2289F8FF00A9B13B /* README.md */; };
-		E5B09C002E9E8A19002238DD /* dressed-robot2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFC2E9E8A19002238DD /* dressed-robot2.usdz */; };
-		E5B09C012E9E8A19002238DD /* asrl-hollow.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF22E9E8A19002238DD /* asrl-hollow.usdz */; };
-		E5B09C022E9E8A19002238DD /* asrl1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF92E9E8A19002238DD /* asrl1.usdz */; };
-		E5B09C032E9E8A19002238DD /* asrl-hollow-blender.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF32E9E8A19002238DD /* asrl-hollow-blender.usdz */; };
-		E5B09C042E9E8A19002238DD /* asrl-hollow-single.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF42E9E8A19002238DD /* asrl-hollow-single.usdz */; };
-		E5B09C052E9E8A19002238DD /* robot.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFD2E9E8A19002238DD /* robot.usdz */; };
-		E5B09C062E9E8A19002238DD /* test-export.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFE2E9E8A19002238DD /* test-export.usdz */; };
-		E5B09C072E9E8A19002238DD /* asrl-scripted.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF62E9E8A19002238DD /* asrl-scripted.usdz */; };
-		E5B09C082E9E8A19002238DD /* asrl0.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF82E9E8A19002238DD /* asrl0.usdz */; };
-		E5B09C092E9E8A19002238DD /* asrl+y.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF72E9E8A19002238DD /* asrl+y.usdz */; };
-		E5B09C0A2E9E8A19002238DD /* asrl-final.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BEE2E9E8A19002238DD /* asrl-final.usdz */; };
-		E5B09C0B2E9E8A19002238DD /* asrl-hollow-thinner.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF52E9E8A19002238DD /* asrl-hollow-thinner.usdz */; };
-		E5B09C0C2E9E8A19002238DD /* cube.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFA2E9E8A19002238DD /* cube.usdz */; };
-		E5B09C0D2E9E8A19002238DD /* asrl-finished-fix.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF12E9E8A19002238DD /* asrl-finished-fix.usdz */; };
-		E5B09C0E2E9E8A19002238DD /* asrl.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BED2E9E8A19002238DD /* asrl.usdz */; };
-		E5B09C0F2E9E8A19002238DD /* asrl-finished-2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BF02E9E8A19002238DD /* asrl-finished-2.usdz */; };
-		E5B09C102E9E8A19002238DD /* dressed-robot.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BFB2E9E8A19002238DD /* dressed-robot.usdz */; };
-		E5B09C112E9E8A19002238DD /* asrl-finished.usdz in Resources */ = {isa = PBXBuildFile; fileRef = E5B09BEF2E9E8A19002238DD /* asrl-finished.usdz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,24 +33,6 @@
 		5DCA879A14A3351D9E9CEA98 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		718E55BB2289F8FF00A9B13B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		78F4E054153DD3A4202C28BA /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
-		E5B09BED2E9E8A19002238DD /* asrl.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl.usdz; sourceTree = "<group>"; };
-		E5B09BEE2E9E8A19002238DD /* asrl-final.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-final.usdz"; sourceTree = "<group>"; };
-		E5B09BEF2E9E8A19002238DD /* asrl-finished.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished.usdz"; sourceTree = "<group>"; };
-		E5B09BF02E9E8A19002238DD /* asrl-finished-2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished-2.usdz"; sourceTree = "<group>"; };
-		E5B09BF12E9E8A19002238DD /* asrl-finished-fix.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-finished-fix.usdz"; sourceTree = "<group>"; };
-		E5B09BF22E9E8A19002238DD /* asrl-hollow.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow.usdz"; sourceTree = "<group>"; };
-		E5B09BF32E9E8A19002238DD /* asrl-hollow-blender.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-blender.usdz"; sourceTree = "<group>"; };
-		E5B09BF42E9E8A19002238DD /* asrl-hollow-single.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-single.usdz"; sourceTree = "<group>"; };
-		E5B09BF52E9E8A19002238DD /* asrl-hollow-thinner.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-hollow-thinner.usdz"; sourceTree = "<group>"; };
-		E5B09BF62E9E8A19002238DD /* asrl-scripted.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl-scripted.usdz"; sourceTree = "<group>"; };
-		E5B09BF72E9E8A19002238DD /* asrl+y.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "asrl+y.usdz"; sourceTree = "<group>"; };
-		E5B09BF82E9E8A19002238DD /* asrl0.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl0.usdz; sourceTree = "<group>"; };
-		E5B09BF92E9E8A19002238DD /* asrl1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = asrl1.usdz; sourceTree = "<group>"; };
-		E5B09BFA2E9E8A19002238DD /* cube.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = cube.usdz; sourceTree = "<group>"; };
-		E5B09BFB2E9E8A19002238DD /* dressed-robot.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dressed-robot.usdz"; sourceTree = "<group>"; };
-		E5B09BFC2E9E8A19002238DD /* dressed-robot2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dressed-robot2.usdz"; sourceTree = "<group>"; };
-		E5B09BFD2E9E8A19002238DD /* robot.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = robot.usdz; sourceTree = "<group>"; };
-		E5B09BFE2E9E8A19002238DD /* test-export.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-export.usdz"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -127,7 +91,6 @@
 				2F60E1E322631E0F00357E98 /* Assets.xcassets */,
 				2F60E1E522631E0F00357E98 /* LaunchScreen.storyboard */,
 				2F60E1EB22631E0F00357E98 /* Info.plist */,
-				E5B09BFF2E9E8A19002238DD /* character */,
 			);
 			path = BodyDetection;
 			sourceTree = "<group>";
@@ -139,31 +102,6 @@
 			);
 			name = LICENSE;
 			path = .;
-			sourceTree = "<group>";
-		};
-		E5B09BFF2E9E8A19002238DD /* character */ = {
-			isa = PBXGroup;
-			children = (
-				E5B09BED2E9E8A19002238DD /* asrl.usdz */,
-				E5B09BEE2E9E8A19002238DD /* asrl-final.usdz */,
-				E5B09BEF2E9E8A19002238DD /* asrl-finished.usdz */,
-				E5B09BF02E9E8A19002238DD /* asrl-finished-2.usdz */,
-				E5B09BF12E9E8A19002238DD /* asrl-finished-fix.usdz */,
-				E5B09BF22E9E8A19002238DD /* asrl-hollow.usdz */,
-				E5B09BF32E9E8A19002238DD /* asrl-hollow-blender.usdz */,
-				E5B09BF42E9E8A19002238DD /* asrl-hollow-single.usdz */,
-				E5B09BF52E9E8A19002238DD /* asrl-hollow-thinner.usdz */,
-				E5B09BF62E9E8A19002238DD /* asrl-scripted.usdz */,
-				E5B09BF72E9E8A19002238DD /* asrl+y.usdz */,
-				E5B09BF82E9E8A19002238DD /* asrl0.usdz */,
-				E5B09BF92E9E8A19002238DD /* asrl1.usdz */,
-				E5B09BFA2E9E8A19002238DD /* cube.usdz */,
-				E5B09BFB2E9E8A19002238DD /* dressed-robot.usdz */,
-				E5B09BFC2E9E8A19002238DD /* dressed-robot2.usdz */,
-				E5B09BFD2E9E8A19002238DD /* robot.usdz */,
-				E5B09BFE2E9E8A19002238DD /* test-export.usdz */,
-			);
-			path = character;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -206,7 +144,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 2F60E1B522631DCF00357E98 /* Build configuration list for PBXProject "BodyDetection" */;
+			buildConfigurationList = 2F60E1B522631DCF00357E98 /* Build configuration list for PBXProject "HabitusPhotoBoothAR" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -234,26 +172,8 @@
 			files = (
 				2F60E1E722631E0F00357E98 /* LaunchScreen.storyboard in Resources */,
 				718E55BC2289F8FF00A9B13B /* README.md in Resources */,
-				E5B09C002E9E8A19002238DD /* dressed-robot2.usdz in Resources */,
-				E5B09C012E9E8A19002238DD /* asrl-hollow.usdz in Resources */,
-				E5B09C022E9E8A19002238DD /* asrl1.usdz in Resources */,
-				E5B09C032E9E8A19002238DD /* asrl-hollow-blender.usdz in Resources */,
-				E5B09C042E9E8A19002238DD /* asrl-hollow-single.usdz in Resources */,
-				E5B09C052E9E8A19002238DD /* robot.usdz in Resources */,
-				E5B09C062E9E8A19002238DD /* test-export.usdz in Resources */,
 				23CA29242EB4EBCB00390F82 /* scroll.json in Resources */,
-				E5B09C072E9E8A19002238DD /* asrl-scripted.usdz in Resources */,
-				E5B09C082E9E8A19002238DD /* asrl0.usdz in Resources */,
-				E5B09C092E9E8A19002238DD /* asrl+y.usdz in Resources */,
-				E5B09C0A2E9E8A19002238DD /* asrl-final.usdz in Resources */,
-				E5B09C0B2E9E8A19002238DD /* asrl-hollow-thinner.usdz in Resources */,
-				E5B09C0C2E9E8A19002238DD /* cube.usdz in Resources */,
 				23CA29262EB4F64100390F82 /* hold.json in Resources */,
-				E5B09C0D2E9E8A19002238DD /* asrl-finished-fix.usdz in Resources */,
-				E5B09C0E2E9E8A19002238DD /* asrl.usdz in Resources */,
-				E5B09C0F2E9E8A19002238DD /* asrl-finished-2.usdz in Resources */,
-				E5B09C102E9E8A19002238DD /* dressed-robot.usdz in Resources */,
-				E5B09C112E9E8A19002238DD /* asrl-finished.usdz in Resources */,
 				2F60E1E422631E0F00357E98 /* Assets.xcassets in Resources */,
 				2F60E1E222631E0F00357E98 /* Main.storyboard in Resources */,
 			);
@@ -425,21 +345,25 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = W695C2P9TL;
+				DEVELOPMENT_TEAM = SWV4QW7MAQ;
 				ENABLE_RCPROJECT_COMPILATION = YES;
 				ENABLE_USDZ_COMPILATION = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/BodyDetection/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HabitusPhotoBoothAR;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.BodyDetection${SAMPLE_CODE_DISAMBIGUATOR}";
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = art.habitusfidei.photobooth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -452,21 +376,25 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = W695C2P9TL;
+				DEVELOPMENT_TEAM = SWV4QW7MAQ;
 				ENABLE_RCPROJECT_COMPILATION = YES;
 				ENABLE_USDZ_COMPILATION = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/BodyDetection/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HabitusPhotoBoothAR;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.BodyDetection${SAMPLE_CODE_DISAMBIGUATOR}";
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = art.habitusfidei.photobooth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -475,7 +403,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2F60E1B522631DCF00357E98 /* Build configuration list for PBXProject "BodyDetection" */ = {
+		2F60E1B522631DCF00357E98 /* Build configuration list for PBXProject "HabitusPhotoBoothAR" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2F60E1CF22631DD100357E98 /* Debug */,

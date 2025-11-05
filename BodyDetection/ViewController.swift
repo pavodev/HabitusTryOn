@@ -159,6 +159,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     private var countdownRemaining = 0
     private var countdownRemainingQR = 30;
     private var countdownLabel: UILabel?
+    private var poseInstructionContainer: UIView?
+    private var poseInstructionLabel: UILabel?
     private var countdownActive: Bool { countdownTimer != nil }
     // private let countdownHaptic = UIImpactFeedbackGenerator(style: .light)
 
@@ -219,7 +221,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         secBadge.translatesAutoresizingMaskIntoConstraints = false
         secBadge.backgroundColor = UIColor.white.withAlphaComponent(0.15)
         secBadge.textColor = .white
-        secBadge.font = .systemFont(ofSize: 18, weight: .bold)
+        secBadge.font = .systemFont(ofSize: 23, weight: .bold)
         secBadge.textAlignment = .center
         secBadge.isHidden = true
         secBadge.layer.cornerRadius = 8
@@ -334,7 +336,10 @@ class ViewController: UIViewController, ARSessionDelegate {
         ensureHintHUD()
         
         // Always update the text, even if already idle
-        hintLabel?.text = "Raise your hands above your head"
+        hintLabel?.text = "🇮🇹: Alza le mani sopra la testa\n🇬🇧: Hands above your head"
+        hintLabel?.textAlignment = .left
+        hintLabel?.numberOfLines = 0
+        hintLabel?.textColor = .white
         hintProgress?.isHidden = true
         hintProgress?.progress = 0  // Reset progress
         hintSecondsBadge?.isHidden = true
@@ -374,7 +379,9 @@ class ViewController: UIViewController, ARSessionDelegate {
         if hudMode != .holding {
             hudMode = .holding
             UIView.animate(withDuration: 0.2) {
-                self.hintLabel?.text = "Hold steady…"
+                self.hintLabel?.text = "🇮🇹: Mantieni la posizione\n🇬🇧: Hold steady"
+                self.hintLabel?.textColor = .white
+                self.hintLabel?.textAlignment = .left
                 self.hintProgress?.isHidden = false
                 self.hintSecondsBadge?.isHidden = false
                 
@@ -456,6 +463,43 @@ class ViewController: UIViewController, ARSessionDelegate {
         ])
         countdownLabel = countdownLbl
 
+        // Add pose instruction label for countdown
+        countdownLabel = countdownLbl
+
+        // Add pose instruction container (matching HUD style)
+        let poseContainer = UIView()
+        poseContainer.translatesAutoresizingMaskIntoConstraints = false
+        poseContainer.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        poseContainer.layer.cornerRadius = 14
+        poseContainer.clipsToBounds = true
+        poseContainer.isHidden = true
+
+        let poseLbl = UILabel()
+        poseLbl.translatesAutoresizingMaskIntoConstraints = false
+        poseLbl.textColor = .white
+        poseLbl.font = .systemFont(ofSize: 18, weight: .semibold)
+        poseLbl.textAlignment = .center
+        poseLbl.numberOfLines = 2
+        poseLbl.text = "Mettiti in posa 💃🏻\nStrike a pose"
+
+        poseContainer.addSubview(poseLbl)
+        view.addSubview(poseContainer)
+
+        NSLayoutConstraint.activate([
+            poseLbl.leadingAnchor.constraint(equalTo: poseContainer.leadingAnchor, constant: 16),
+            poseLbl.trailingAnchor.constraint(equalTo: poseContainer.trailingAnchor, constant: -16),
+            poseLbl.topAnchor.constraint(equalTo: poseContainer.topAnchor, constant: 14),
+            poseLbl.bottomAnchor.constraint(equalTo: poseContainer.bottomAnchor, constant: -14),
+            
+            poseContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            poseContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            poseContainer.widthAnchor.constraint(lessThanOrEqualToConstant: 340),
+            poseContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
+        ])
+
+        poseInstructionContainer = poseContainer
+        poseInstructionLabel = poseLbl
+
         ensureHintHUD()
         setHUDIdle()
     }
@@ -526,9 +570,9 @@ class ViewController: UIViewController, ARSessionDelegate {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .white
         label.font = .systemFont(ofSize: 18, weight: .semibold)
-        label.textAlignment = .center
-        label.numberOfLines = 1
-        label.text = "Processing the image..."
+        label.textAlignment = .left
+        label.numberOfLines = 2
+        label.text = "🇮🇹: Attendi\n🇬🇧: Wait"
 
         container.addSubview(label)
         view.addSubview(container)
@@ -593,20 +637,20 @@ class ViewController: UIViewController, ARSessionDelegate {
 
         let lbl = UILabel()
         lbl.translatesAutoresizingMaskIntoConstraints = false
-        lbl.text = "Scan to download your photo"
+        lbl.text = "🇮🇹: Scarica la tua foto\n🇬🇧: Download your photo"
         lbl.font = .systemFont(ofSize: 20, weight: .semibold)
         lbl.textColor = .black
-        lbl.textAlignment = .center
+        lbl.textAlignment = .left
         lbl.numberOfLines = 0
 
         // Add countdown label
         let countdownLbl = UILabel()
         countdownLbl.translatesAutoresizingMaskIntoConstraints = false
-        countdownLbl.text = "Auto-closing in \(countdownRemainingQR) seconds"
-        countdownLbl.font = .systemFont(ofSize: 16, weight: .regular)
+        countdownLbl.text = "\(countdownRemainingQR)"
+        countdownLbl.font = .systemFont(ofSize: 25, weight: .heavy)
         countdownLbl.textColor = .gray
         countdownLbl.textAlignment = .center
-        countdownLbl.numberOfLines = 1
+        countdownLbl.numberOfLines = 0
         countdownLbl.tag = 1001  // Tag for updating
 
         container.addSubview(qrView)
@@ -657,7 +701,7 @@ class ViewController: UIViewController, ARSessionDelegate {
                 timer.invalidate()
                 self.dismissQR()
             } else {
-                countdownLbl?.text = "Auto-closing in \(remainingSeconds) second\(remainingSeconds == 1 ? "" : "s")"
+                countdownLbl?.text = "\(remainingSeconds)"
             }
         }
         
@@ -828,10 +872,13 @@ class ViewController: UIViewController, ARSessionDelegate {
         countdownLabel?.text = "\(countdownRemaining)"
         countdownLabel?.isHidden = false
         
+        poseInstructionLabel?.text = "🇮🇹: Mettiti in posa! 💃🏻\n🇬🇧: Strike a pose! 💃🏻"
+        poseInstructionContainer?.isHidden = false
+        
         // Prepare and trigger initial haptic
         // countdownHaptic.prepare()
         // countdownHaptic.impactOccurred()
-
+        
         // Create timer that fires after 1 second, then repeats
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now() + 1.0, repeating: 1.0)
@@ -860,6 +907,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         countdownTimer?.cancel()
         countdownTimer = nil
         countdownLabel?.isHidden = true
+        poseInstructionContainer?.isHidden = true
     }
 
     // MARK: - ARSessionDelegate (auto-capture on pose)
