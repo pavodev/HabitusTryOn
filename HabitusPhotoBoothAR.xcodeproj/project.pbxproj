@@ -23,7 +23,7 @@
 		23ACE38B2E5C5E9500567EDB /* ViewController-backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController-backup.swift"; sourceTree = "<group>"; };
 		23CA29232EB4EBCB00390F82 /* scroll.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scroll.json; sourceTree = "<group>"; };
 		23CA29252EB4F64100390F82 /* hold.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = hold.json; sourceTree = "<group>"; };
-		2F60E1D822631E0E00357E98 /* BodyDetection.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BodyDetection.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F60E1D822631E0E00357E98 /* HabitusPhotoBoothAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HabitusPhotoBoothAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F60E1DA22631E0F00357E98 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2F60E1DC22631E0F00357E98 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		2F60E1E122631E0F00357E98 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -75,7 +75,7 @@
 		2F60E1BB22631DCF00357E98 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2F60E1D822631E0E00357E98 /* BodyDetection.app */,
+				2F60E1D822631E0E00357E98 /* HabitusPhotoBoothAR.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,7 +124,7 @@
 			);
 			name = BodyDetection;
 			productName = Simple;
-			productReference = 2F60E1D822631E0E00357E98 /* BodyDetection.app */;
+			productReference = 2F60E1D822631E0E00357E98 /* HabitusPhotoBoothAR.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -358,7 +358,7 @@
 				);
 				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = art.habitusfidei.photobooth;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = HabitusPhotoBoothAR;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -389,7 +389,7 @@
 				);
 				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = art.habitusfidei.photobooth;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = HabitusPhotoBoothAR;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
